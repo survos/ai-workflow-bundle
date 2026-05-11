@@ -1,0 +1,29 @@
+{
+    "name": "survos/ai-workflow-bundle",
+    "description": "State-bundle workflow primitives for async AI preparation, observation, analysis, and publishing.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": ["symfony", "ai", "workflow", "state", "observation", "analysis", "claims"],
+    "autoload": {
+        "psr-4": {
+            "Survos\\AiWorkflowBundle\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.4",
+        "survos/state-bundle": "^2.0",
+        "survos/ai-claims-bundle": "^2.0",
+        "symfony/dependency-injection": "^8.0",
+        "symfony/framework-bundle": "^8.0",
+        "symfony/messenger": "^8.0",
+        "symfony/service-contracts": "^3.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.0|^14.0"
+    },
+    "extra": {
+        "symfony": {
+            "require": "^8.0"
+        }
+    }
+}
