@@ -1,0 +1,11 @@
+parameters:
+    level: 3
+    inferPrivatePropertyTypeFromConstructor: true
+    paths:
+        - ./src/
+
+    excludePaths:
+       analyse:
+                  - ./vendor
+
+

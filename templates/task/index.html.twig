@@ -1,0 +1,104 @@
+{% extends '@SurvosTabler/layout/base.html.twig' %}
+
+{% block page_title %}AI Workflow Tasks{% endblock %}
+
+{% block content %}
+
+{# ── Task tables ──────────────────────────────────────────────────────────── #}
+{% for group, tasks in groups %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">{{ group }} Tasks</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                <tr>
+                    <th>Task</th>
+                    <th>Description</th>
+                    <th>Inputs</th>
+                    <th>Agent</th>
+                    <th>Prompts</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for task in tasks %}
+                    <tr>
+                        <td>
+                            <a href="{{ path('survos_ai_workflow_task', {taskName: task.name}) }}">
+                                {{ task.name }}
+                            </a>
+                        </td>
+                        <td class="small text-secondary">{{ task.description }}</td>
+                        <td>
+                            {% for capability in task.capabilities %}
+                                <span class="badge bg-blue-lt">{{ capability }}</span>
+                            {% endfor %}
+                        </td>
+                        <td class="small">{{ task.meta.agent ?? '' }}</td>
+                        <td class="small">
+                            {% for name, source in task.prompts %}
+                                {% if source %}
+                                    <a href="#prompt-{{ task.name }}-{{ name }}">{{ name }}</a>
+                                    {% if not loop.last %} · {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="empty">No AI workflow tasks are registered.</div>
+{% endfor %}
+
+{# ── Prompt content — one card per task, system/user as tabs ─────────────── #}
+{% for group, tasks in groups %}
+    {% for task in tasks %}
+        {% if task.prompts|filter(s => s) is not empty %}
+            <div class="card mb-3" id="prompt-{{ task.name }}">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h3 class="card-title mb-0"><code>{{ task.name }}</code></h3>
+                        {% if task.description %}
+                            <div class="text-secondary small mt-1">{{ task.description }}</div>
+                        {% endif %}
+                    </div>
+                    <a href="#" class="small text-secondary">↑ top</a>
+                </div>
+                <div class="card-header pt-0">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        {% for name, source in task.prompts %}
+                            {% if source %}
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link {{ loop.first ? 'active' : '' }}"
+                                       href="#prompt-{{ task.name }}-{{ name }}"
+                                       data-bs-toggle="tab" role="tab">
+                                        {{ name|title }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content">
+                        {% for name, source in task.prompts %}
+                            {% if source %}
+                                <div class="tab-pane {{ loop.first ? 'active show' : '' }}"
+                                     id="prompt-{{ task.name }}-{{ name }}"
+                                     role="tabpanel">
+                                    <pre class="mb-0 p-3" style="max-height: 600px; overflow: auto; font-size: .8rem;"><code>{{ source }}</code></pre>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+{% endblock %}

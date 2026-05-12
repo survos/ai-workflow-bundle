@@ -1,0 +1,29 @@
+{% if availableSteps %}
+<available_observation_tasks>
+Follow-up image tasks you may add to `pending_steps` if high-res processing is warranted:
+{% for step in availableSteps %}- {{ step }}
+{% endfor %}</available_observation_tasks>
+{% endif %}
+
+{% if availableAnalysis %}
+<available_analysis_tasks>
+Analysis tasks you may add to `analysis_tasks` based on content type:
+{% for step in availableAnalysis %}- {{ step }}
+{% endfor %}</available_analysis_tasks>
+{% endif %}
+
+{% if operatorHint %}
+<operator_hint>
+{% for k, v in operatorHint %}{{ k }}: {{ v }}
+{% endfor %}
+</operator_hint>
+{% endif %}
+
+{% if existingMetadata %}
+<existing_metadata>
+{% for k, v in existingMetadata %}{{ k }}: {{ v }}
+{% endfor %}
+</existing_metadata>
+{% endif %}
+
+Observe the image and return the JSON envelope described in your instructions.

@@ -1,0 +1,49 @@
+{% extends '@SurvosTabler/layout/base.html.twig' %}
+
+{% block page_title %}AI Workflow Task: {{ taskName }}{% endblock %}
+
+{% block content %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-2">Service</dt>
+                <dd class="col-sm-10"><code>{{ serviceId }}</code></dd>
+
+                <dt class="col-sm-2">Inputs</dt>
+                <dd class="col-sm-10">
+                    {% for capability in capabilities %}
+                        <span class="badge bg-blue-lt">{{ capability }}</span>
+                    {% else %}
+                        <span class="text-secondary">none declared</span>
+                    {% endfor %}
+                </dd>
+
+                {% for key, value in meta %}
+                    <dt class="col-sm-2">{{ key|replace({'_': ' '})|title }}</dt>
+                    <dd class="col-sm-10">
+                        {% if value is iterable %}
+                            <pre class="mb-0"><code>{{ value|json_encode(constant('JSON_PRETTY_PRINT')) }}</code></pre>
+                        {% else %}
+                            <code>{{ value }}</code>
+                        {% endif %}
+                    </dd>
+                {% endfor %}
+            </dl>
+        </div>
+    </div>
+
+    {% for name, source in prompts %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">{{ name|title }} Prompt</h3>
+            </div>
+            <div class="card-body">
+                {% if source %}
+                    <pre class="mb-0"><code>{{ source }}</code></pre>
+                {% else %}
+                    <p class="text-secondary mb-0">No {{ name }} prompt template found.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

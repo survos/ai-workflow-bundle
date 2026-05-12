@@ -4,40 +4,40 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Survos\AiClaimsBundle\Service\ClaimIngestor;
 use Survos\AiClaimsBundle\Service\RawClaim;
 use Survos\AiClaimsBundle\Service\RunMeta;
+use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 
 final class TaskRunner
 {
     public function __construct(
         private readonly TaskRegistry $registry,
         private readonly ClaimIngestor $claimIngestor,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
     }
 
-    /**
-     * Runs the next queued task for the subject.
-     *
-     * Returns the task name that was consumed, or null when there was no work.
-     */
     public function runNext(WorkflowSubjectInterface $subject): ?string
     {
         if ($subject->isWorkflowLocked()) {
             return null;
         }
 
-        $queue = $subject->getWorkflowQueue();
-        if ($queue === []) {
+        if ($subject->pendingCount(SubjectFlow::TRANSITION_OBSERVE) === 0) {
             return null;
         }
 
-        $taskName = array_shift($queue);
-        $subject->setWorkflowQueue($queue);
+        $taskName = $subject->shiftPendingStep(SubjectFlow::TRANSITION_OBSERVE);
+        $subjectId = $subject->getWorkflowSubjectId();
 
         $task = $this->registry->get($taskName);
         if ($task === null) {
+            $this->logger->info('[{task}] skipped — not registered', ['task' => $taskName, 'subject' => $subjectId]);
             $this->recordSystemRun($subject, $taskName, [
                 new RawClaim('ai:taskSkipped', $taskName, 1.0, 'No registered workflow task.'),
             ]);
@@ -46,6 +46,7 @@ final class TaskRunner
         }
 
         if (!$task->supports($subject)) {
+            $this->logger->info('[{task}] skipped — supports() false', ['task' => $taskName, 'subject' => $subjectId]);
             $this->recordSystemRun($subject, $taskName, [
                 new RawClaim('ai:taskSkipped', $taskName, 1.0, 'Task supports() returned false.'),
             ]);
@@ -53,10 +54,16 @@ final class TaskRunner
             return $taskName;
         }
 
+        $imageUrl = $subject instanceof ImageSubjectInterface ? $subject->getWorkflowImageUrl() : null;
+        if ($imageUrl !== null) {
+            $this->logger->info('[{task}] image: {url}', ['task' => $taskName, 'url' => $imageUrl]);
+        }
+
         $startedAt = microtime(true);
         try {
             $result = $task->run($subject);
         } catch (\Throwable $e) {
+            $this->logger->error('[{task}] FAILED: {error}', ['task' => $taskName, 'error' => $e->getMessage()]);
             $this->recordSystemRun($subject, $taskName, [
                 new RawClaim('ai:taskFailed', $taskName, 1.0, $e->getMessage()),
             ], new RunMeta(durationMs: $this->durationMs($startedAt)));
@@ -64,29 +71,65 @@ final class TaskRunner
             return $taskName;
         }
 
-        $meta = $this->withDuration($result->meta, $this->durationMs($startedAt));
+        $durationMs = $this->durationMs($startedAt);
+        $meta = $this->withDuration($result->meta, $durationMs);
+
+        // Log prompts and response at debug level (-vv)
+        if ($meta->prompt !== null) {
+            $prompts = json_decode($meta->prompt, true);
+            if (is_array($prompts)) {
+                $this->logger->info('[{task}] system prompt:{nl}{prompt}', [
+                    'task'   => $taskName,
+                    'nl'     => "\n",
+                    'prompt' => $prompts['system'] ?? '',
+                ]);
+                $this->logger->info('[{task}] user prompt:{nl}{prompt}', [
+                    'task'   => $taskName,
+                    'nl'     => "\n",
+                    'prompt' => $prompts['user'] ?? '',
+                ]);
+            }
+        }
+
+        if ($meta->response !== null) {
+            $this->logger->info('[{task}] response:{nl}{json}', [
+                'task' => $taskName,
+                'nl'   => "\n",
+                'json' => json_encode($meta->response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ]);
+        }
+
+        $tokens = array_filter([
+            'in'     => $meta->inputTokens,
+            'out'    => $meta->outputTokens,
+            'cached' => $meta->imageTokens,
+        ]);
+        $this->logger->info('[{task}] done in {ms}ms{tokens}', [
+            'task'   => $taskName,
+            'ms'     => $durationMs,
+            'tokens' => $tokens ? ' tokens=' . json_encode($tokens) : '',
+        ]);
+
         $this->claimIngestor->record(
             scope: $subject->getWorkflowScope(),
             subjectType: $subject::class,
-            subjectId: $subject->getWorkflowSubjectId(),
+            subjectId: $subjectId,
             source: $taskName . '@1.0',
             rawClaims: $result->claims,
             meta: $meta,
         );
 
-        if ($result->appendTasks !== []) {
-            $subject->setWorkflowQueue(array_values([
-                ...$subject->getWorkflowQueue(),
-                ...$result->appendTasks,
-            ]));
+        foreach ($result->appendTasks as $step) {
+            $subject->addPendingStep($step, SubjectFlow::TRANSITION_OBSERVE);
+        }
+
+        foreach ($result->appendAnalysisTasks as $step) {
+            $subject->addPendingStep($step, SubjectFlow::TRANSITION_ANALYZE);
         }
 
         return $taskName;
     }
 
-    /**
-     * @param list<RawClaim> $claims
-     */
     private function recordSystemRun(
         WorkflowSubjectInterface $subject,
         string $taskName,

@@ -1,0 +1,37 @@
+{% set observedText = text ?? ocr_text ?? context.ocr_text ?? context.ocrText ?? null %}
+{% if observedText %}
+Extract tabular data from this census record text. This is an analysis pass over observed text; do not invent values that are not present in the text.
+---
+{{ observedText }}
+---
+
+Return a JSON object with this structure:
+```json
+{
+  "title": "Brief description, e.g. '1850 US Census, Plymouth, Massachusetts, Sheet 3B'",
+  "has_tables": true,
+  "tables": [
+    {
+      "headers": ["Name", "Age", "Sex", "Occupation", "Birthplace", "Real Estate", "etc"],
+      "rows": [
+        ["John Smith", "45", "M", "Farmer", "Massachusetts", "$1200"],
+        ["Mary Smith", "38", "F", "Keeping House", "Massachusetts", ""]
+      ],
+      "notes": "Enumerator: J.H. Wilson. Sheet 3B, Line 12-18."
+    }
+  ],
+  "language": "en",
+  "confidence": "high|medium|low"
+}
+```
+
+Rules:
+- Include EVERY household member present in the observed text
+- Preserve all column headers exactly as written
+- Use empty string "" for blank cells
+- Mark illegible text as "[illegible]"
+- Note the page number, line range, and enumerator if present
+- Set has_tables: false if no tabular data found
+{% else %}
+No observed text is available. Return has_tables: false with a low-confidence explanation.
+{% endif %}

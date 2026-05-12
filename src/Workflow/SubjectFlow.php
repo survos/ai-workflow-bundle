@@ -17,7 +17,7 @@ use Survos\StateBundle\Attribute\Workflow;
  * allowed. Business policy belongs in app listeners.
  */
 #[Workflow(supports: [WorkflowSubjectInterface::class], name: self::WORKFLOW_NAME)]
-final class SubjectWF
+final class SubjectFlow
 {
     public const WORKFLOW_NAME = 'ai_subject';
 
@@ -50,9 +50,17 @@ final class SubjectWF
         info: 'Analysis complete',
         description: 'Application-level interpretation has been derived from observed evidence and context.',
         bgColor: 'success',
-        next: [self::TRANSITION_ANALYZE, self::TRANSITION_PUBLISH],
+        next: [self::TRANSITION_ANALYZE, self::TRANSITION_REVIEW],
     )]
     public const PLACE_ANALYZED = 'analyzed';
+
+    #[Place(
+        info: 'Reviewed',
+        description: 'Analysis has passed app-defined review, whether automatic policy checks or human approval.',
+        bgColor: 'success',
+        next: [self::TRANSITION_REVIEW, self::TRANSITION_PUBLISH],
+    )]
+    public const PLACE_REVIEWED = 'reviewed';
 
     #[Place(
         info: 'Published',
@@ -65,7 +73,7 @@ final class SubjectWF
         from: [self::PLACE_NEW],
         to: self::PLACE_PREPARED,
         async: true,
-        info: 'Prepare',
+        info: 'Prepare Metadata/Image',
         description: 'App-owned setup: fetch source, normalize content, create media variants, resolve URLs, or load metadata.',
     )]
     public const TRANSITION_PREPARE = 'prepare';
@@ -74,7 +82,7 @@ final class SubjectWF
         from: [self::PLACE_PREPARED, self::PLACE_OBSERVED],
         to: self::PLACE_OBSERVED,
         async: true,
-        info: 'Observe',
+        info: 'Low-res Observe',
         description: 'Generate neutral evidence from prepared content. For media this is usually low-res observation plus optional high-res reads; for text it may be summaries or structural facts.',
     )]
     public const TRANSITION_OBSERVE = 'observe';
@@ -83,13 +91,23 @@ final class SubjectWF
         from: [self::PLACE_OBSERVED, self::PLACE_ANALYZED],
         to: self::PLACE_ANALYZED,
         async: true,
-        info: 'Analyze',
+        info: 'Analyze from Text',
         description: 'App-owned interpretation from observations and context. Does not inspect pixels or source content directly unless the app explicitly chooses that policy.',
+        guard: "subject.pendingCount(constant('Survos\\\\AiWorkflowBundle\\\\Workflow\\\\SubjectFlow::TRANSITION_OBSERVE')) == 0",
     )]
     public const TRANSITION_ANALYZE = 'analyze';
 
     #[Transition(
-        from: [self::PLACE_ANALYZED, self::PLACE_PUBLISHED],
+        from: [self::PLACE_ANALYZED, self::PLACE_REVIEWED],
+        to: self::PLACE_REVIEWED,
+        async: true,
+        info: 'App-owned Review',
+        description: 'App-owned approval point after analysis. The app decides whether this is automatic, human, or skipped by policy.',
+    )]
+    public const TRANSITION_REVIEW = 'review';
+
+    #[Transition(
+        from: [self::PLACE_REVIEWED, self::PLACE_PUBLISHED],
         to: self::PLACE_PUBLISHED,
         async: true,
         info: 'Publish',
