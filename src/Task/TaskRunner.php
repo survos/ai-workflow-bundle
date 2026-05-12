@@ -6,9 +6,9 @@ namespace Survos\AiWorkflowBundle\Task;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Survos\AiClaimsBundle\Service\ClaimIngestor;
-use Survos\AiClaimsBundle\Service\RawClaim;
-use Survos\AiClaimsBundle\Service\RunMeta;
+use Survos\ClaimsBundle\Service\ClaimIngestor;
+use Survos\ClaimsBundle\Service\RawClaim;
+use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
@@ -22,17 +22,17 @@ final class TaskRunner
     ) {
     }
 
-    public function runNext(WorkflowSubjectInterface $subject): ?string
+    public function runNext(WorkflowSubjectInterface $subject, string $phase = SubjectFlow::TRANSITION_OBSERVE): ?string
     {
         if ($subject->isWorkflowLocked()) {
             return null;
         }
 
-        if ($subject->pendingCount(SubjectFlow::TRANSITION_OBSERVE) === 0) {
+        if ($subject->pendingCount($phase) === 0) {
             return null;
         }
 
-        $taskName = $subject->shiftPendingStep(SubjectFlow::TRANSITION_OBSERVE);
+        $taskName = $subject->shiftPendingStep($phase);
         $subjectId = $subject->getWorkflowSubjectId();
 
         $task = $this->registry->get($taskName);

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Survos\AiClaimsBundle\Service\ClaimIngestor;
+use Survos\ClaimsBundle\Service\ClaimIngestor;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
@@ -16,7 +16,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use function Symfony\Component\String\u;
 
-#[AsCommand('ai:workflow:run', 'Run a single AI workflow task against a specific entity.')]
+#[AsCommand('ai:task:run', 'Run a single AI workflow task against a specific entity.')]
 final class RunTaskCommand
 {
     public function __construct(
@@ -32,6 +32,9 @@ final class RunTaskCommand
         #[Argument('Entity class short name or APP_ENTITY_* global key (e.g. GalleryImage)')] string $entity,
         #[Argument('Entity identifier (id, code, ULID, …)')] string $id,
         #[Option('JSON operator hints merged into workflow context (e.g. \'{"content_type":"postcard"}\')')] ?string $operator = null,
+        #[Option('Simple string hint added to operator context (e.g. "use highres")')] ?string $hint = null,
+        #[Option('Override which task to run, ignoring the <task> argument (e.g. --task observe_hires)', name: 'task')] ?string $runTask = null,
+        #[Option('Override image URL (e.g. imgproxy thumbnail) instead of entity\'s getWorkflowImageUrl()')] ?string $thumbnailUrl = null,
         #[Option('Persist claims to the database')] ?bool $persist = null,
         #[Option('Pretty-print the full claim data')] bool $pretty = false,
     ): int {
@@ -40,8 +43,12 @@ final class RunTaskCommand
         if ($operator !== null) {
             $operatorHints = json_decode($operator, true, 512, JSON_THROW_ON_ERROR);
         }
+        if ($hint !== null) {
+            $operatorHints['hint'] = $hint;
+        }
 
         // ── Resolve task ─────────────────────────────────────────────────────
+        $task = $runTask ?? $task;
         $taskObj = $this->taskRegistry->get($task);
         if ($taskObj === null) {
             $io->error(sprintf(
@@ -81,8 +88,31 @@ final class RunTaskCommand
             $entityObj->mergeWorkflowContext($operatorHints);
         }
 
-        // ── Run ──────────────────────────────────────────────────────────────
+        // ── Override image URL (e.g. imgproxy thumbnail) ─────────────────────
+        if ($thumbnailUrl !== null && property_exists($entityObj, 'resolvedImageUrl')) {
+            $entityObj->resolvedImageUrl = $thumbnailUrl;
+        }
+
+        // ── Show inputs ──────────────────────────────────────────────────────
         $io->section(sprintf('Running "%s" on %s #%s', $task, (new \ReflectionClass($class))->getShortName(), $id));
+
+        $imageUrl = $entityObj instanceof \Survos\AiWorkflowBundle\Contract\ImageSubjectInterface
+            ? $entityObj->getWorkflowImageUrl() : null;
+        if ($imageUrl !== null) {
+            $io->writeln(sprintf('  <comment>image:</comment>    %s', $imageUrl));
+        }
+        if ($operatorHints !== []) {
+            $io->writeln(sprintf('  <comment>operator:</comment> %s',
+                json_encode($operatorHints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+        }
+        if ($entityObj instanceof \Survos\AiWorkflowBundle\Contract\ContextSubjectInterface) {
+            $ctx = array_filter($entityObj->getWorkflowContext());
+            if ($ctx) {
+                $io->writeln(sprintf('  <comment>context:</comment>  %s',
+                    json_encode($ctx, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
+            }
+        }
+        $io->newLine();
 
         $result = $taskObj->run($entityObj);
 
@@ -106,13 +136,16 @@ final class RunTaskCommand
                 ? json_encode($claim->value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 : (string) $claim->value;
             $conf  = sprintf('%.0f%%', $claim->confidence * 100);
-            $basis = $claim->basis ? sprintf(' [%s]', mb_substr($claim->basis, 0, 60)) : '';
-            $io->writeln(sprintf('  <info>%-30s</info> %s  <comment>%s</comment>%s',
-                $claim->predicate,
-                mb_substr($value, 0, 80),
-                $conf,
-                $basis,
-            ));
+            $basis = $claim->basis ? sprintf(' [%s]', mb_substr($claim->basis, 0, 80)) : '';
+
+            // Short values on one line; long values wrapped on next line
+            if (mb_strlen($value) <= 80) {
+                $io->writeln(sprintf('  <info>%-32s</info> %s  <comment>%s</comment>%s',
+                    $claim->predicate, $value, $conf, $basis));
+            } else {
+                $io->writeln(sprintf('  <info>%-32s</info> <comment>%s</comment>%s', $claim->predicate, $conf, $basis));
+                $io->writeln('    ' . wordwrap($value, 110, "\n    "));
+            }
         }
 
         if ($pretty && $result->meta?->response) {
@@ -135,9 +168,9 @@ final class RunTaskCommand
                 foreach ($result->appendTasks as $step) {
                     $entityObj->addPendingStep($step, SubjectFlow::TRANSITION_OBSERVE);
                 }
-                $this->entityManager->flush();
             }
 
+            $this->entityManager->flush();
             $io->success('Claims persisted.');
         } else {
             $io->note('Dry run — claims not persisted.');

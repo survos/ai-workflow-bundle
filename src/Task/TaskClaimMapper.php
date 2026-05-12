@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
-use Survos\AiClaimsBundle\Entity\Claim;
-use Survos\AiClaimsBundle\Service\RawClaim;
+use Survos\ClaimsBundle\Entity\Claim;
+use Survos\ClaimsBundle\Service\RawClaim;
 
 final class TaskClaimMapper
 {

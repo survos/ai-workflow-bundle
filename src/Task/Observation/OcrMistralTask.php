@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\AiClaimsBundle\Entity\Claim;
-use Survos\AiClaimsBundle\Service\RunMeta;
+use Survos\ClaimsBundle\Entity\Claim;
+use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
-use Survos\AiClaimsBundle\Service\RawClaim;
-use Survos\AiClaimsBundle\Service\RunMeta;
+use Survos\ClaimsBundle\Service\RawClaim;
+use Survos\ClaimsBundle\Service\RunMeta;
 
 final readonly class TaskResult
 {

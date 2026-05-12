@@ -37,7 +37,13 @@ Emit JSON with up to three top-level keys, always in this order:
 
 **`text_flags`** — multiple may be true. A filled pension form: `typed_text + handwritten_text + is_form + is_filled_form`. A postcard back with printed layout and handwritten message: `typed_text + handwritten_text`. A pure photograph with no writing: all false.
 
-**`needs_high_res`** — set `true` when important text or detail exists but cannot be faithfully captured at thumbnail scale. Set `false` when the thumbnail is sufficient for analysis.
+**`needs_high_res`** — set `true` when the thumbnail is insufficient for catalogue-quality description. This includes:
+- Text, handwriting, or inscriptions that cannot be read at thumbnail scale
+- Group portraits or scenes where individual identification, clothing detail, or facial expressions matter for cataloguing
+- Objects with markings, inscriptions, or fine detail (coins, documents, maps, patches)
+- Any image where a cataloguer would say "I need to see this more clearly"
+
+Set `false` only when the thumbnail gives everything needed — a clear landscape, a simple object, a single well-lit subject with no fine detail of catalogue significance.
 
 **`pending_steps`** — follow-up observation task names (image processing) to run before analysis. Choose only from the available observation tasks provided in the user message. Leave empty (`[]`) when the thumbnail is sufficient.
 
@@ -51,11 +57,23 @@ Set `risk_if_skipped` only when `needs_high_res` is `true`; explain what catalog
 
 Present only when `pending_steps` is empty (no follow-up image tasks needed).
 
-Natural description — a few paragraphs, no forced headings. Hedging is welcome: "appears to be," "consistent with," "possibly 1940s based on uniform style." The analysis step decides what to do with the hedge.
+This is the **only time the image is seen**. The downstream analysis step will never re-open it. Write as if you are dictating a complete inventory to someone who cannot see the image and must be able to answer any question about it from your description alone.
 
-**Include:** people (count, apparent age, clothing, roles by appearance), setting (indoor/outdoor, architectural detail, light, weather), composition, era cues observable in the image, materials and condition for objects, anything visually present worth recording.
+Be exhaustive. Write as much as the image contains. Do not summarise — enumerate.
 
-**Do not include:** subject headings, keyword tags with confidence/basis, a dense_summary, speculations as structured fields, or anything synthesising image evidence with supplied metadata — those belong to the analysis step.
+**People:** Account for every visible person individually, in reading order (left to right, front to back). For each: estimated age, apparent gender, clothing (colour, pattern, fabric, cut), accessories, hairstyle, expression, body language, position in frame, role or apparent relationship. State total count explicitly.
+
+**Setting:** Indoor/outdoor, architectural details, furniture, props, background elements, light source and quality, time of day cues, weather if visible.
+
+**Composition:** Camera angle, depth of field, framing, what draws the eye and why.
+
+**Era and condition cues:** Clothing styles, technology, signage, vehicle types, image process artefacts — anything dating the image. Note physical condition of the object: fading, tears, writing on verso if visible at edges.
+
+**Objects and text:** Every visible object, inscription, printed word, caption, stamp, or marking.
+
+Hedging is welcome and expected: "appears to be," "consistent with," "possibly 1940s based on collar style." The analysis step decides what to do with uncertainty.
+
+**Do not include:** subject headings, keyword tags, a summary sentence, controlled-vocabulary terms, or synthesised conclusions — those belong to the analysis step.
 
 ## 3. Structured transcription
 

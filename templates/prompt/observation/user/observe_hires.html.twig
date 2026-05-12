@@ -1,0 +1,14 @@
+{% if availableAnalysis %}
+<available_analysis_tasks>
+Analysis tasks you may add to `analysis_tasks` based on content type:
+{% for step in availableAnalysis %}- {{ step }}
+{% endfor %}</available_analysis_tasks>
+{% endif %}
+
+{% if stage1Routing %}
+<thumbnail_pass_routing>
+{{ stage1Routing|json_encode(constant('JSON_PRETTY_PRINT')) }}
+</thumbnail_pass_routing>
+{% endif %}
+
+Examine this image in full detail and return the JSON envelope described in your instructions.

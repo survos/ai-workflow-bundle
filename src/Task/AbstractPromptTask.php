@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
-use Survos\AiClaimsBundle\Service\RunMeta;
+use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\AiWorkflowBundle\Contract\AiThumbnailProviderInterface;
 use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;

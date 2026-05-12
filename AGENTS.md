@@ -21,7 +21,7 @@ If an agent cannot follow these rules, it should refuse to proceed.
 - A `TaskRegistry` + `TaskRunner` for dispatching tasks against `WorkflowSubjectInterface` entities
 - `AbstractPromptTask` as the base for all tasks — renders Twig prompt templates, calls `symfony/ai-agent`, and maps results to claims
 - Integration with `survos/state-bundle` for Symfony Workflow-based state transitions
-- Integration with `survos/ai-claims-bundle` for structured claim storage
+- Integration with `survos/claims-bundle` for structured claim storage
 
 The bundle is used in content-enrichment pipelines where **correctness and reproducibility matter**.
 

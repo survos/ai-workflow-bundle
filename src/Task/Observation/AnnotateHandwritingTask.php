@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\AiClaimsBundle\Entity\Claim;
+use Survos\ClaimsBundle\Entity\Claim;
 use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;

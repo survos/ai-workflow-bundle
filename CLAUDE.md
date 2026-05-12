@@ -35,7 +35,7 @@ The `observe` and `analyze` transitions are re-entrant (a subject can repeat the
 
 1. An app workflow listener (using `#[AsTransitionListener]`) populates `$subject->pendingSteps` with task name strings during `prepare`.
 2. On each `observe` transition, the listener calls `TaskRunner::runNext($subject)`.
-3. `TaskRunner` shifts the first task off `pendingSteps`, resolves it via `TaskRegistry`, calls `task->run($subject)`, and records all output through `ClaimIngestor` from `survos/ai-claims-bundle`.
+3. `TaskRunner` shifts the first task off `pendingSteps`, resolves it via `TaskRegistry`, calls `task->run($subject)`, and records all output through `ClaimIngestor` from `survos/claims-bundle`.
 4. If `TaskResult::$appendTasks` is non-empty, those names are appended to `pendingSteps`, driving further `observe` transitions.
 
 Task outputs are never stored as opaque JSON blobs — they are always `ClaimRun` + `Claim` rows.

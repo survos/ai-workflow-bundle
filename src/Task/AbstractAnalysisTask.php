@@ -4,8 +4,20 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
+use Survos\ClaimsBundle\Repository\ClaimRepository;
+use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Symfony\Contracts\Service\Attribute\Required;
+
 abstract class AbstractAnalysisTask extends AbstractPromptTask implements AnalysisTaskInterface
 {
+    private ClaimRepository $claimRepository;
+
+    #[Required]
+    public function setClaimRepository(ClaimRepository $claimRepository): void
+    {
+        $this->claimRepository = $claimRepository;
+    }
+
     protected function systemPromptTemplate(): string
     {
         return '@SurvosAiWorkflow/prompt/analysis/system.html.twig';
@@ -23,5 +35,30 @@ abstract class AbstractAnalysisTask extends AbstractPromptTask implements Analys
     protected function userPrompt(array $context): string
     {
         return 'Analyze the observation evidence and extract the requested information.';
+    }
+
+    protected function context(WorkflowSubjectInterface $subject): array
+    {
+        $context = parent::context($subject);
+
+        $proseClaim = $this->claimRepository->findLatestByPredicate(
+            subjectType: $subject::class,
+            subjectId: $subject->getWorkflowSubjectId(),
+            predicate: TaskClaimMapper::PRED_OBSERVATION_PROSE,
+            scope: $subject->getWorkflowScope(),
+        );
+
+        if ($proseClaim !== null) {
+            $context['observation_prose'] = (string) $proseClaim->value;
+        }
+
+        return $context;
+    }
+
+    protected function promptContext(array $inputs, array $context = []): array
+    {
+        return parent::promptContext($inputs, $context) + [
+            'observationProse' => $context['observation_prose'] ?? null,
+        ];
     }
 }

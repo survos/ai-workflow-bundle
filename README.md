@@ -27,7 +27,7 @@ The bundle may define reusable tasks and prompt templates. Treat those as a prom
 - `Task\TaskInterface`: callable workflow task that returns claims.
 - `Task\TaskResult`: claims plus optional follow-up tasks.
 - `Task\TaskRegistry`: lazy task lookup by name.
-- `Task\TaskRunner`: consumes one queued task and records claims through `survos/ai-claims-bundle`.
+- `Task\TaskRunner`: consumes one queued task and records claims through `survos/claims-bundle`.
 
 Task outputs are not stored as opaque JSON result blobs. They are recorded as `ClaimRun` and `Claim` rows. Apps can still denormalize claim projections onto their own entities during `publish`.
 
@@ -87,7 +87,7 @@ final class GalleryWorkflow
 }
 ```
 
-`TaskRunner::runNext()` removes one task from the queue, records claims through `survos/ai-claims-bundle`, and appends any follow-up tasks returned by the task. For image workflows, `EnrichFromThumbnailTask::TASK` is usually the first observation task; it can append higher-resolution observation tasks such as `OcrMistralTask::TASK` or `TranscribeHandwritingTask::TASK`.
+`TaskRunner::runNext()` removes one task from the queue, records claims through `survos/claims-bundle`, and appends any follow-up tasks returned by the task. For image workflows, `EnrichFromThumbnailTask::TASK` is usually the first observation task; it can append higher-resolution observation tasks such as `OcrMistralTask::TASK` or `TranscribeHandwritingTask::TASK`.
 
 ## Naming
 
