@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle;
 
 use Survos\AiWorkflowBundle\DependencyInjection\Compiler\TaskRegistryPass;
+use Survos\AiWorkflowBundle\Controller\SubjectController;
 use Survos\AiWorkflowBundle\Controller\TaskController;
 use Survos\AiWorkflowBundle\Menu\AiWorkflowMenuSubscriber;
+use Survos\AiWorkflowBundle\Repository\SubjectRepository;
 use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
 use Survos\AiWorkflowBundle\Task\TaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
@@ -14,6 +16,8 @@ use Survos\AiWorkflowBundle\Task\TaskRunner;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Survos\StateBundle\Config\AttributesWorkflowConfigBuilder;
+use Survos\StateBundle\Util\QueueNameUtil;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
@@ -52,11 +56,16 @@ final class SurvosAiWorkflowBundle extends AbstractBundle
             ->public()
             ->arg('$taskMap', '%survos_ai_workflow.task_map%');
 
+        $services->set(SubjectRepository::class);
         $services->set(TaskClaimMapper::class);
         $services->set(TaskRunner::class)
             ->public();
 
         $services->set(TaskController::class)
+            ->public()
+            ->tag('controller.service_arguments');
+
+        $services->set(SubjectController::class)
             ->public()
             ->tag('controller.service_arguments');
 
@@ -81,12 +90,22 @@ final class SurvosAiWorkflowBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $builder->prependExtensionConfig('survos_state', [
-            'workflow_paths' => [
-                '%kernel.project_dir%/src/Workflow',
-                __DIR__ . '/Workflow',
+        $builder->prependExtensionConfig('doctrine', [
+            'orm' => [
+                'mappings' => [
+                    'SurvosAiWorkflowBundle' => [
+                        'is_bundle' => false,
+                        'type'      => 'attribute',
+                        'dir'       => \dirname(__DIR__) . '/src/Entity',
+                        'prefix'    => 'Survos\\AiWorkflowBundle\\Entity',
+                        'alias'     => 'AiWorkflow',
+                    ],
+                ],
             ],
         ]);
+
+        // Workflow registration is handled by StatePrependExtension in state-bundle,
+        // which now auto-includes this bundle's /Workflow dir via class_exists detection.
 
         $builder->prependExtensionConfig('twig', [
             'paths' => [

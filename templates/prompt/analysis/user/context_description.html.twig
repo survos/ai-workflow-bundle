@@ -1,1 +1,16 @@
-Write a catalogue description for this {{ type|default('item') }}, using all available context.
+Write a contextual description for this item that synthesises the visual observation evidence with the provenance context provided below.
+
+The description should read as a catalogue entry: informative, factual, and precise. Combine what was visually observed with what the record tells us — do not simply restate either in isolation.
+
+{% if provenanceDescription or sourceTags or date or country or city %}
+<provenance_context>
+{% if provenanceDescription %}caption: {{ provenanceDescription }}
+{% endif %}
+{% if date %}date: {{ date }}
+{% endif %}
+{% if country or city %}location: {{ [city, country]|filter(v => v is not empty)|join(', ') }}
+{% endif %}
+{% if sourceTags %}source_tags: {{ sourceTags }}
+{% endif %}
+</provenance_context>
+{% endif %}

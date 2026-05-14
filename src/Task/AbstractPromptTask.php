@@ -12,6 +12,7 @@ use Survos\AiWorkflowBundle\Contract\TextSubjectInterface;
 use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Content\Image;
+use Symfony\AI\Platform\Message\Content\ImageUrl;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -73,7 +74,7 @@ abstract class AbstractPromptTask implements TaskInterface
             && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf');
 
         $userMessage = $attachImage
-            ? Message::ofUser($userPrompt, $this->fetchImage($imageUrl))
+            ? Message::ofUser($userPrompt, new ImageUrl($imageUrl))
             : Message::ofUser($userPrompt);
 
         $options = [];

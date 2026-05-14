@@ -93,10 +93,10 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
         $claims = $this->claimMapper->map($flat);
 
         if ($prose !== '') {
-            $claims[] = new RawClaim(TaskClaimMapper::PRED_OBSERVATION_PROSE, $prose, 1.0, null);
+            $claims[] = new RawClaim(TaskClaimMapper::PRED_OBSERVATION_PROSE, $prose, 100, null);
         }
         if ($transcription !== null) {
-            $claims[] = new RawClaim(TaskClaimMapper::PRED_TRANSCRIPTION, $transcription, 1.0, null);
+            $claims[] = new RawClaim(TaskClaimMapper::PRED_TRANSCRIPTION, $transcription, 100, null);
         }
 
         return $claims;

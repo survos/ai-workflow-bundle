@@ -39,7 +39,7 @@ final class TaskRunner
         if ($task === null) {
             $this->logger->info('[{task}] skipped — not registered', ['task' => $taskName, 'subject' => $subjectId]);
             $this->recordSystemRun($subject, $taskName, [
-                new RawClaim('ai:taskSkipped', $taskName, 1.0, 'No registered workflow task.'),
+                new RawClaim('ai:taskSkipped', $taskName, 100, 'No registered workflow task.'),
             ]);
 
             return $taskName;
@@ -48,7 +48,7 @@ final class TaskRunner
         if (!$task->supports($subject)) {
             $this->logger->info('[{task}] skipped — supports() false', ['task' => $taskName, 'subject' => $subjectId]);
             $this->recordSystemRun($subject, $taskName, [
-                new RawClaim('ai:taskSkipped', $taskName, 1.0, 'Task supports() returned false.'),
+                new RawClaim('ai:taskSkipped', $taskName, 100, 'Task supports() returned false.'),
             ]);
 
             return $taskName;
@@ -65,7 +65,7 @@ final class TaskRunner
         } catch (\Throwable $e) {
             $this->logger->error('[{task}] FAILED: {error}', ['task' => $taskName, 'error' => $e->getMessage()]);
             $this->recordSystemRun($subject, $taskName, [
-                new RawClaim('ai:taskFailed', $taskName, 1.0, $e->getMessage()),
+                new RawClaim('ai:taskFailed', $taskName, 100, $e->getMessage()),
             ], new RunMeta(durationMs: $this->durationMs($startedAt)));
 
             return $taskName;
@@ -112,7 +112,7 @@ final class TaskRunner
 
         $this->claimIngestor->record(
             scope: $subject->getWorkflowScope(),
-            subjectType: $subject::class,
+            subjectType: $subject->getWorkflowSubjectType(),
             subjectId: $subjectId,
             source: $taskName . '@1.0',
             rawClaims: $result->claims,
@@ -138,7 +138,7 @@ final class TaskRunner
     ): void {
         $this->claimIngestor->record(
             scope: $subject->getWorkflowScope(),
-            subjectType: $subject::class,
+            subjectType: $subject->getWorkflowSubjectType(),
             subjectId: $subject->getWorkflowSubjectId(),
             source: $taskName . '@system',
             rawClaims: $claims,

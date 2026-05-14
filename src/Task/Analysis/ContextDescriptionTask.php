@@ -6,6 +6,8 @@ namespace Survos\AiWorkflowBundle\Task\Analysis;
 
 use Survos\AiWorkflowBundle\Task\AbstractAnalysisTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
+use Survos\DataContracts\Vocabulary\DcTerms;
+use Survos\DataContracts\Vocabulary\ItemField;
 
 
 use Survos\AiWorkflowBundle\Result\DescriptionResult;
@@ -27,5 +29,21 @@ final class ContextDescriptionTask extends AbstractAnalysisTask
     protected function responseFormatClass(): string
     {
         return DescriptionResult::class;
+    }
+
+    protected function promptContext(array $inputs, array $context = []): array
+    {
+        $sourceTags = $context['source_tags'] ?? $context['sourceTags'] ?? null;
+        if (is_array($sourceTags)) {
+            $sourceTags = implode(', ', $sourceTags);
+        }
+
+        return parent::promptContext($inputs, $context) + [
+            'provenanceDescription' => $context[DcTerms::DESCRIPTION->value] ?? $context['description'] ?? null,
+            'sourceTags'            => $sourceTags ?: null,
+            'date'                  => $context[DcTerms::DATE->value] ?? $context['date'] ?? null,
+            'country'               => $context[ItemField::COUNTRY] ?? null,
+            'city'                  => $context[ItemField::CITY]    ?? null,
+        ];
     }
 }

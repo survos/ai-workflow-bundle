@@ -82,8 +82,9 @@ final class SubjectFlow
         from: [self::PLACE_PREPARED, self::PLACE_OBSERVED],
         to: self::PLACE_OBSERVED,
         async: true,
-        info: 'Low-res Observe',
-        description: 'Generate neutral evidence from prepared content. For media this is usually low-res observation plus optional high-res reads; for text it may be summaries or structural facts.',
+        guard: "subject.pendingCount(constant('Survos\\\\AiWorkflowBundle\\\\Workflow\\\\SubjectFlow::TRANSITION_OBSERVE')) > 0",
+        info: 'Observation Tasks',
+        description: 'Generate neutral evidence from prepared content. For media this starts with low-res observation plus optional high-res reads; for text it may be summaries or structural facts.',
     )]
     public const TRANSITION_OBSERVE = 'observe';
 

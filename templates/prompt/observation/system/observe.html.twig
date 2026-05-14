@@ -35,15 +35,28 @@ Emit JSON with up to three top-level keys, always in this order:
 
 **`content_type`** — one of: `photograph`, `postcard_front`, `postcard_back`, `negative`, `map`, `manuscript`, `letter`, `form`, `newspaper`, `clipping`, `object`, `coin`, `patch`, `drawing`, `print`, `painting`, `unknown`.
 
-**`text_flags`** — multiple may be true. A filled pension form: `typed_text + handwritten_text + is_form + is_filled_form`. A postcard back with printed layout and handwritten message: `typed_text + handwritten_text`. A pure photograph with no writing: all false.
+**`text_flags`** — multiple may be true. All default to `false`. Only set `true` for text that is **legible and catalogue-relevant** at the current resolution.
 
-**`needs_high_res`** — set `true` when the thumbnail is insufficient for catalogue-quality description. This includes:
-- Text, handwriting, or inscriptions that cannot be read at thumbnail scale
-- Group portraits or scenes where individual identification, clothing detail, or facial expressions matter for cataloguing
-- Objects with markings, inscriptions, or fine detail (coins, documents, maps, patches)
-- Any image where a cataloguer would say "I need to see this more clearly"
+- `has_text` — there is readable text somewhere in the image. Do **not** set true for illegible distant signs, blurry architectural lettering, or text too small to read. If you cannot actually read the words, it is not legible.
+- `typed_text` — printed/typeset text that can be read. Street signs at 30 metres, building inscriptions too small to resolve, background shop fronts: `false`. A printed caption, postmark, headline, or form label you can actually read: `true`.
+- `handwritten_text` — cursive or manuscript text that can be read or transcribed. A vague impression of writing in the background: `false`.
+- `is_form` — the image is of a form or structured document with labelled fields.
+- `is_filled_form` — a form with visible filled-in entries.
 
-Set `false` only when the thumbnail gives everything needed — a clear landscape, a simple object, a single well-lit subject with no fine detail of catalogue significance.
+A girl in a First Communion dress standing in front of a building: all flags `false`. A postcard back with a handwritten message: `handwritten_text + typed_text` (printed postmark). A filled pension form: `typed_text + handwritten_text + is_form + is_filled_form`.
+
+**`needs_high_res`** — set `true` only when the thumbnail is the bottleneck: the content cannot be adequately described without a higher-resolution pass. Specifically:
+- Handwriting, manuscript text, or form fields that need to be read or transcribed
+- Inscriptions, stamps, accession numbers, or captions that are primary catalogue evidence and are illegible at thumbnail scale
+- Objects where markings are the main subject (coins, patches, seals, ceramics with text)
+- Maps or technical drawings where place names or legend text must be read
+
+Set `false` when:
+- The subject is a scene or portrait and the thumbnail captures it adequately — people, clothing, setting, and composition are legible even if background signs are not
+- Text is incidental background (street signs, distant storefronts, window lettering) rather than primary catalogue content
+- The image is a photograph of people or places where no text needs to be transcribed
+
+When in doubt, prefer `false`. The quality bar is "would a cataloguer reject this description as incomplete without seeing the full image?"
 
 **`pending_steps`** — follow-up observation task names (image processing) to run before analysis. Choose only from the available observation tasks provided in the user message. Leave empty (`[]`) when the thumbnail is sufficient.
 

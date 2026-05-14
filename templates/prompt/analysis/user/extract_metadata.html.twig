@@ -1,6 +1,35 @@
-Extract all structured metadata from this archival item.
-{% if ocr_text %}
+Analyse this {{ contentType ?? 'archival item' }} and return a JSON object with the fields below. Use the visual observation evidence in your instructions plus the provenance context provided here.
 
-OCR text:
-"{{ ocr_text|slice(0, 800) }}"
+{% if provenanceDescription or date or country or city %}
+<provenance_context>
+{% if provenanceDescription %}caption: {{ provenanceDescription }}
 {% endif %}
+{% if date %}date: {{ date }}
+{% endif %}
+{% if country or city %}location: {{ [city, country]|filter(v => v is not empty)|join(', ') }}
+{% endif %}
+</provenance_context>
+{% endif %}
+
+Return this JSON shape (omit any field you cannot determine):
+
+{
+  "description": "2–4 sentence catalogue description combining what is seen with what the provenance tells us.",
+  "description_basis": "e.g. 'provenance caption + observation prose' or 'observation only'",
+  "dense_summary": "≤ 400 chars. Entity-rich, no filler. Who/what/when/where.",
+  "dense_summary_basis": "e.g. 'provenance caption and date field'",
+  {% if not existingTitle %}
+  "title": "Concise descriptive title.",
+  "title_basis": "e.g. 'provenance caption' or 'derived from observation'",
+  {% endif %}
+  "date_hint": "Year, decade, or range e.g. '1965' or '1960s'",
+  "date_confidence": 90,
+  "date_basis": "e.g. 'provenance date field' or 'clothing style in observation'",
+  "subjects": [{"term": "...", "confidence": 85, "basis": "short evidence string — always required"}],
+  "people": [{"term": "Full Name or role description", "confidence": 70, "basis": "..."}],
+  "places": [{"term": "Place name", "confidence": 95, "basis": "..."}],
+  "organisations": [{"term": "Org name", "confidence": 80, "basis": "..."}],
+  "language": "ISO 639-1 code if text is present — omit for non-text items"
+}
+
+Confidence is an integer 0–100. Always populate _basis fields — they are the audit trail distinguishing provenance-sourced facts from visual inference. "provenance caption" means the source caption stated it directly; "observation prose" means derived from what the AI saw; "provenance + observation" means both agree.

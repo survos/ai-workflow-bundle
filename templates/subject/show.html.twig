@@ -1,0 +1,131 @@
+{% extends '@SurvosTabler/layout/base.html.twig' %}
+
+{% set dto   = subject.dto() %}
+{% set title = dto.label %}
+{% set tabId = 'subj-' ~ subject.id %}
+{% block page_title %}Subject: {{ title }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  {# ── Left: image + identity ───────────────────────────────────────────── #}
+  <div class="col-12 col-lg-5">
+
+    {% if dto.iiifBase %}
+      <div class="card mb-3">
+        <a href="{{ dto.iiifBase|imgproxy('ai_hires') }}" target="_blank" rel="noopener">
+          <img src="{{ dto.iiifBase|imgproxy('ai_thumbnail') }}" class="img-fluid w-100 d-block"
+               alt="{{ title }}"
+               style="max-height:520px; object-fit:contain; background:#111; cursor:zoom-in;"
+               loading="lazy">
+        </a>
+        <div class="card-footer py-1 small text-end">
+          <a href="{{ dto.iiifBase|imgproxy('ai_hires') }}" target="_blank" rel="noopener">Full size ↗</a>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card mb-3">
+      <div class="card-header"><h3 class="card-title">Identity</h3></div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-borderless mb-0">
+          <tr><th class="ps-3" style="width:35%">Subject ID</th><td><code class="small">{{ subject.subjectId }}</code></td></tr>
+          <tr><th class="ps-3">Type</th><td class="small text-truncate" style="max-width:0;">{{ subject.subjectType }}</td></tr>
+          {% if subject.scope %}
+          <tr><th class="ps-3">Scope</th><td class="small">{{ subject.scope }}</td></tr>
+          {% endif %}
+          {% if subject.createdAt %}
+          <tr><th class="ps-3">Created</th><td class="small">{{ subject.createdAt|date('Y-m-d H:i') }}</td></tr>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Right: tabbed claims/workflow panel ──────────────────────────────── #}
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li class="nav-item"><a href="#{{ tabId }}-text"     class="nav-link active" data-bs-toggle="tab">Text</a></li>
+          <li class="nav-item"><a href="#{{ tabId }}-summary"  class="nav-link"        data-bs-toggle="tab">Summary</a></li>
+          <li class="nav-item"><a href="#{{ tabId }}-tags"     class="nav-link"        data-bs-toggle="tab">Tags</a></li>
+          <li class="nav-item"><a href="#{{ tabId }}-source"   class="nav-link"        data-bs-toggle="tab">Source Data</a></li>
+          <li class="nav-item"><a href="#{{ tabId }}-workflow" class="nav-link"        data-bs-toggle="tab">Workflow</a></li>
+          <li class="nav-item"><a href="#{{ tabId }}-claims"   class="nav-link"        data-bs-toggle="tab">Claims</a></li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content">
+
+          <div id="{{ tabId }}-text" class="tab-pane active show" role="tabpanel">
+            <twig:OcrClaimsPanel
+              subjectType="{{ subject.subjectType }}"
+              subjectId="{{ subject.workflowSubjectId }}"
+              scope="{{ subject.scope }}"
+            />
+          </div>
+
+          <div id="{{ tabId }}-summary" class="tab-pane" role="tabpanel">
+            <twig:ClaimsSummary
+              subjectType="{{ subject.subjectType }}"
+              subjectId="{{ subject.workflowSubjectId }}"
+              scope="{{ subject.scope }}"
+            />
+          </div>
+
+          <div id="{{ tabId }}-tags" class="tab-pane" role="tabpanel">
+            <twig:ClaimsList
+              subjectType="{{ subject.subjectType }}"
+              subjectId="{{ subject.workflowSubjectId }}"
+              scope="{{ subject.scope }}"
+              predicates="dcterms:subject,foaf:Person,dcterms:spatial,ai:speculation"
+              layout="chips"
+            />
+          </div>
+
+          <div id="{{ tabId }}-source" class="tab-pane" role="tabpanel">
+            <table class="table table-sm small mb-0">
+              <thead><tr><th>Field</th><th>Value</th></tr></thead>
+              <tbody>
+                {% for key, value in subject.data %}
+                  <tr>
+                    <td class="text-secondary font-monospace">{{ key }}</td>
+                    <td>
+                      {% if value is iterable %}{{ value|join(', ') }}
+                      {% elseif value is same as(true) %}<span class="badge bg-green-lt">true</span>
+                      {% elseif value is same as(false) %}<span class="badge bg-red-lt">false</span>
+                      {% else %}{{ value }}{% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="{{ tabId }}-workflow" class="tab-pane" role="tabpanel">
+            <twig:state:workflow-marking
+              :subject="subject"
+              workflowCode="ai_subject"
+              :redirectUrl="app.request.uri"
+              layout="table"
+            />
+          </div>
+
+          <div id="{{ tabId }}-claims" class="tab-pane" role="tabpanel">
+            <twig:ClaimsList
+              subjectType="{{ subject.subjectType }}"
+              subjectId="{{ subject.workflowSubjectId }}"
+              scope="{{ subject.scope }}"
+              excludePredicates="ai:ocrText,ai:htrText,ai:printedText"
+            />
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
