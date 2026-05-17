@@ -6,6 +6,27 @@
 {% block page_title %}Subject: {{ title }}{% endblock %}
 
 {% block content %}
+{% set subjectIndexParams = {} %}
+{% if app.request.query.get('scope') %}
+  {% set subjectIndexParams = subjectIndexParams|merge({scope: app.request.query.get('scope')}) %}
+{% elseif subject.scope %}
+  {% set subjectIndexParams = subjectIndexParams|merge({scope: subject.scope}) %}
+{% endif %}
+{% if app.request.query.get('subjectType') %}
+  {% set subjectIndexParams = subjectIndexParams|merge({subjectType: app.request.query.get('subjectType')}) %}
+{% elseif subject.subjectType %}
+  {% set subjectIndexParams = subjectIndexParams|merge({subjectType: subject.subjectType}) %}
+{% endif %}
+{% if app.request.query.get('marking') %}
+  {% set subjectIndexParams = subjectIndexParams|merge({marking: app.request.query.get('marking')}) %}
+{% endif %}
+
+<div class="mb-3">
+  <a href="{{ path('survos_ai_workflow_subjects', subjectIndexParams) }}" class="btn btn-outline-secondary">
+    &larr; Subjects
+  </a>
+</div>
+
 <div class="row g-4">
 
   {# ── Left: image + identity ───────────────────────────────────────────── #}

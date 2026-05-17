@@ -56,11 +56,21 @@
             {% set title = dto.label %}
             {% set date  = dto.date %}
             {% set desc  = dto.description %}
+            {% set showParams = {id: subject.id} %}
+            {% if activeScope %}
+                {% set showParams = showParams|merge({scope: activeScope}) %}
+            {% endif %}
+            {% if activeType %}
+                {% set showParams = showParams|merge({subjectType: activeType}) %}
+            {% endif %}
+            {% if activeMarking %}
+                {% set showParams = showParams|merge({marking: activeMarking}) %}
+            {% endif %}
 
             <div class="col-sm-6 col-lg-4 col-xl-3">
                 <div class="card card-sm">
                     {% if dto.iiifBase %}
-                        <a href="{{ path('survos_ai_workflow_subject', {id: subject.id}) }}"
+                        <a href="{{ path('survos_ai_workflow_subject', showParams) }}"
                            class="d-block text-center" style="background: #f4f6fa;">
                             <img src="{{ dto.iiifBase|imgproxy('ai_thumbnail') }}"
                                  class="d-block mx-auto"
@@ -71,7 +81,7 @@
                     {% endif %}
                     <div class="card-body p-2">
                         <div class="d-flex align-items-start justify-content-between mb-1">
-                            <a href="{{ path('survos_ai_workflow_subject', {id: subject.id}) }}"
+                            <a href="{{ path('survos_ai_workflow_subject', showParams) }}"
                                class="text-body fw-semibold small text-truncate"
                                style="max-width: 80%;"
                                title="{{ title }}">
