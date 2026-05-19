@@ -20,10 +20,10 @@
         "symfony/service-contracts": "^3.6",
         "symfony/twig-bundle": "^8.0",
         "twig/twig": "^3.0",
-        "symfony/ai-bundle": "^0.8",
-        "symfony/ai-agent": "^0.8",
-        "symfony/ai-open-ai-platform": "^0.8",
-        "symfony/ai-mistral-platform": "^0.8",
+        "symfony/ai-bundle": "^0.9",
+        "symfony/ai-agent": "^0.9",
+        "symfony/ai-open-ai-platform": "^0.9",
+        "symfony/ai-mistral-platform": "^0.9",
         "survos/data-contracts": "^2.0"
     },
     "suggest": {
