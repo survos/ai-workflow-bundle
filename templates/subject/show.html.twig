@@ -34,14 +34,14 @@
 
     {% if dto.iiifBase %}
       <div class="card mb-3">
-        <a href="{{ dto.iiifBase|imgproxy('ai_hires') }}" target="_blank" rel="noopener">
-          <img src="{{ dto.iiifBase|imgproxy('ai_thumbnail') }}" class="img-fluid w-100 d-block"
+        <a href="{{ dto.iiifBase|imgproxy('archive') }}" target="_blank" rel="noopener">
+          <img src="{{ dto.iiifBase|imgproxy('observe') }}" class="img-fluid w-100 d-block"
                alt="{{ title }}"
                style="max-height:520px; object-fit:contain; background:#111; cursor:zoom-in;"
                loading="lazy">
         </a>
         <div class="card-footer py-1 small text-end">
-          <a href="{{ dto.iiifBase|imgproxy('ai_hires') }}" target="_blank" rel="noopener">Full size ↗</a>
+          <a href="{{ dto.iiifBase|imgproxy('archive') }}" target="_blank" rel="noopener">Full size ↗</a>
         </div>
       </div>
     {% endif %}
