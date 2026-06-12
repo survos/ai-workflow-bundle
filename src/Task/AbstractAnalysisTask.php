@@ -41,6 +41,13 @@ abstract class AbstractAnalysisTask extends AbstractPromptTask implements Analys
     {
         $context = parent::context($subject);
 
+        // A consumed claim supplied directly by the subject (e.g. pasted text in the
+        // app:tasks tester, or an already-hydrated entity) wins — this decouples the
+        // dependency from its source and lets prompt preview work without a database.
+        if (isset($context['observation_prose'])) {
+            return $context;
+        }
+
         $proseClaim = $this->claimRepository->findLatestByPredicate(
             subjectType: $subject::class,
             subjectId: $subject->getWorkflowSubjectId(),

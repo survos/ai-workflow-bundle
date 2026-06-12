@@ -19,7 +19,7 @@ use Survos\AiWorkflowBundle\Task\TaskResult;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-#[AsTask('Dense-print OCR via Mistral — for typed/printed text, newspapers, tables, and certificates.', self::class)]
+#[AsTask('Dense-print OCR via Mistral — for typed/printed text, newspapers, tables, and certificates.', self::class, produces: ['ai:ocrText', 'ai:layoutBlock'], samples: ['https://s3.amazonaws.com/pastperfectonline/images/museum_986/006/20100110001.jpg'])]
 final class OcrMistralTask implements TaskInterface, ImageTaskInterface, ObservationTaskInterface
 {
     use TaskNameTrait;

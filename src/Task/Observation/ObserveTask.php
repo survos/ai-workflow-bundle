@@ -16,7 +16,7 @@ use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Service\Attribute\Required;
 
-#[AsTask('Low-resolution visual observation. Produces a routing decision, prose description, and structured transcription. Queues follow-up image and analysis tasks.', self::class)]
+#[AsTask('Low-resolution visual observation. Produces a routing decision, prose description, and structured transcription. Queues follow-up image and analysis tasks.', self::class, produces: ['ai:observationProse'])]
 final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface, ObservationTaskInterface
 {
     public const string TASK = 'observe';

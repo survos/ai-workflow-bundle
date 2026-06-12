@@ -4,41 +4,42 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\ClaimsBundle\Entity\Claim;
-use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
-use Survos\AiWorkflowBundle\Result\OcrResult;
-use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
-use Symfony\AI\Agent\AgentInterface;
+use Survos\ClaimsBundle\Entity\Claim;
+use Symfony\AI\Platform\PlatformInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-#[AsTask('Standard Tesseract OCR for clean machine-printed text.', self::class)]
-final class OcrTask extends AbstractPromptTask implements ImageTaskInterface, ObservationTaskInterface
+/**
+ * Tesseract OCR via the free, self-hosted ai-tools service — for clean typewritten
+ * print and text-only documents. (Replaces the previous misnamed task that secretly
+ * routed to OpenAI gpt-4o; this one is genuinely Tesseract and needs no API key.)
+ */
+#[AsTask('Tesseract OCR (free, self-hosted via ai-tools) — for clean typewritten print and text-only documents.', self::class, produces: ['ai:ocrText'], samples: ['https://s3.amazonaws.com/pastperfectonline/images/museum_986/006/20100110001.jpg'])]
+final class OcrTask extends AbstractAiToolsTask implements ImageTaskInterface, ObservationTaskInterface
 {
     public const string TASK = 'ocr_tesseract';
 
     public function __construct(
-        #[Autowire(service: 'ai.agent.ocr')]
-        AgentInterface $agent,
+        #[Autowire(service: 'ai.platform.openresponses.ai_tools')]
+        PlatformInterface $platform,
     ) {
-        parent::__construct($agent);
+        parent::__construct($platform);
     }
 
-    public function supports(WorkflowSubjectInterface $subject): bool
+    protected function model(): string
     {
-        return $subject instanceof ImageSubjectInterface && $subject->getWorkflowImageUrl() !== null;
+        return 'tesseract';
     }
 
-    protected function responseFormatClass(): string
+    protected function platformName(): string
     {
-        return OcrResult::class;
+        return 'ai-tools';
     }
 
-    protected function claimsFromData(array $data): array
+    protected function claimPredicate(): ?string
     {
-        return $this->claimMapper->map($data, Claim::PRED_OCR_TEXT);
+        return Claim::PRED_OCR_TEXT;
     }
 }

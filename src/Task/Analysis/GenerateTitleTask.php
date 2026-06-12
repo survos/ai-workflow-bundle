@@ -12,7 +12,7 @@ use Survos\AiWorkflowBundle\Result\TitleResult;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-#[AsTask('Text-only generation of a concise title from subject context and prior claims.', self::class)]
+#[AsTask('Text-only generation of a concise title from subject context and prior claims.', self::class, consumes: ['ai:observationProse'], produces: ['dcterms:title'])]
 final class GenerateTitleTask extends AbstractAnalysisTask
 {
     public const string TASK = 'generate_title';

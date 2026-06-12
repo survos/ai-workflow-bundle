@@ -58,15 +58,7 @@ abstract class AbstractPromptTask implements TaskInterface
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
         $inputs = $this->inputs($subject);
-        $context = $this->context($subject);
-        $tplContext = $this->promptContext($inputs, $context);
-
-        $systemPrompt = trim($this->twig->render($this->systemPromptTemplate(), $tplContext));
-
-        $userTpl = $this->userPromptTemplate();
-        $userPrompt = $userTpl !== null
-            ? trim($this->twig->render($userTpl, $tplContext))
-            : trim($this->userPrompt($tplContext));
+        [$systemPrompt, $userPrompt] = $this->buildPrompts($subject, $inputs);
 
         $imageUrl = $inputs['image_url'] ?? null;
         $attachImage = is_string($imageUrl)
@@ -101,6 +93,38 @@ abstract class AbstractPromptTask implements TaskInterface
                 outputTokens: $tokens['completion'] ?? null,
             ),
         );
+    }
+
+    /**
+     * Render the system and user prompts for a subject WITHOUT calling the model —
+     * the "description" half of an agent task (the other half being its pre-selected
+     * model). Powers prompt previewing / task testing (e.g. the app:tasks TUI).
+     *
+     * @param array<string, mixed>|null $inputs pre-computed inputs(), or null to recompute
+     *
+     * @return array{0: string, 1: string} [system, user]
+     */
+    public function buildPrompts(WorkflowSubjectInterface $subject, ?array $inputs = null): array
+    {
+        $inputs ??= $this->inputs($subject);
+        $tplContext = $this->promptContext($inputs, $this->context($subject));
+
+        $system = trim($this->twig->render($this->systemPromptTemplate(), $tplContext));
+
+        $userTpl = $this->userPromptTemplate();
+        $user = $userTpl !== null
+            ? trim($this->twig->render($userTpl, $tplContext))
+            : trim($this->userPrompt($tplContext));
+
+        return [$system, $user];
+    }
+
+    /**
+     * The input shape this task expects: 'image' for vision tasks, 'text' otherwise.
+     */
+    public function inputKind(): string
+    {
+        return $this instanceof ImageTaskInterface ? 'image' : 'text';
     }
 
     public function getMeta(): array

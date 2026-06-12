@@ -35,7 +35,14 @@ final class TaskRegistryPass implements CompilerPassInterface
                 continue;
             }
 
-            $descriptor = new AsTask($description, $class);
+            $attribute  = $this->resolveAttribute($class);
+            $descriptor = new AsTask(
+                $description,
+                $class,
+                $attribute?->consumes ?? [],
+                $attribute?->produces ?? [],
+                $attribute?->samples ?? [],
+            );
 
             $definition->setPublic(false);
             $taskMap[$name]     = $serviceId;
@@ -71,6 +78,18 @@ final class TaskRegistryPass implements CompilerPassInterface
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function resolveAttribute(string $class): ?AsTask
+    {
+        try {
+            foreach ((new \ReflectionClass($class))->getAttributes(AsTask::class) as $attr) {
+                return $attr->newInstance();
+            }
+        } catch (\Throwable) {
+        }
+
+        return null;
     }
 
     private function resolveDescription(string $class): string
