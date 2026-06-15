@@ -6,7 +6,7 @@ namespace Survos\AiWorkflowBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Survos\ClaimsBundle\Service\ClaimIngestor;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\TaskRunner;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
@@ -113,7 +113,7 @@ final class RunTaskCommand
         // ── Show inputs ──────────────────────────────────────────────────────
         $io->section(sprintf('Running "%s" on %s #%s', $task, (new \ReflectionClass($class))->getShortName(), $id));
 
-        $imageUrl = $entityObj instanceof \Survos\AiWorkflowBundle\Contract\ImageSubjectInterface
+        $imageUrl = $entityObj instanceof \Survos\DataContracts\Workflow\ImageSubjectInterface
             ? $entityObj->getWorkflowImageUrl() : null;
         if ($imageUrl !== null) {
             $io->writeln(sprintf('  <comment>image:</comment>    %s', $imageUrl));
@@ -122,7 +122,7 @@ final class RunTaskCommand
             $io->writeln(sprintf('  <comment>operator:</comment> %s',
                 json_encode($operatorHints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
         }
-        if ($entityObj instanceof \Survos\AiWorkflowBundle\Contract\ContextSubjectInterface) {
+        if ($entityObj instanceof \Survos\DataContracts\Workflow\ContextSubjectInterface) {
             $ctx = array_filter($entityObj->getWorkflowContext());
             if ($ctx) {
                 $io->writeln(sprintf('  <comment>context:</comment>  %s',

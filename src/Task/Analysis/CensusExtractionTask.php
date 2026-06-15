@@ -8,9 +8,9 @@ use Survos\AiWorkflowBundle\Task\AbstractAnalysisTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
 
 
-use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\TextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\ContextSubjectInterface;
+use Survos\DataContracts\Workflow\TextSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 

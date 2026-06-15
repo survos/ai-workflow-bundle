@@ -49,10 +49,16 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
          */
         public readonly array   $keywords         = [],
 
-        /** Named or described people visible */
+        /**
+         * Named or described people visible.
+         * @var list<string>
+         */
         public readonly array   $people           = [],
 
-        /** Places with confidence */
+        /**
+         * Places visible or inferred (name, optionally hedged with ? / ??).
+         * @var list<string>
+         */
         public readonly array   $places           = [],
 
         /** ContentType: photograph, postcard, map, manuscript, object, etc. */
@@ -149,9 +155,14 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
         /** @var array<string, list<string>> $byConf */
         $byConf = ['high' => [], 'medium' => [], 'low' => []];
         foreach ($this->keywords as $kw) {
-            $term = $kw['term'];
-            $conf = $kw['confidence'] ?? 'medium';
-            if ($term) $byConf[$conf][] = $term;
+            // Tolerate plain-string keywords and entries missing term/confidence.
+            $term = is_array($kw) ? ($kw['term'] ?? null) : (is_string($kw) ? $kw : null);
+            if (!$term) {
+                continue;
+            }
+            $conf = (is_array($kw) ? ($kw['confidence'] ?? null) : null) ?: 'medium';
+            $byConf[$conf] ??= [];
+            $byConf[$conf][] = $term;
         }
 
         $out = [

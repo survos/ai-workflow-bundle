@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\AbstractCapabilityTask;
 use Symfony\AI\Platform\Message\Content\ImageUrl;
 use Symfony\AI\Platform\Message\Message;

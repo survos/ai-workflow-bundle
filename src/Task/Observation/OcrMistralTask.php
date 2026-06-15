@@ -6,9 +6,9 @@ namespace Survos\AiWorkflowBundle\Task\Observation;
 
 use Survos\ClaimsBundle\Entity\Claim;
 use Survos\ClaimsBundle\Service\RunMeta;
-use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\ContextSubjectInterface;
+use Survos\DataContracts\Workflow\ImageSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
@@ -86,16 +86,39 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
             throw new \RuntimeException('OcrMistralTask requires an ImageSubjectInterface with an image URL.');
         }
 
-        $context  = $subject instanceof ContextSubjectInterface ? $subject->getWorkflowContext() : [];
+        $context = $subject instanceof ContextSubjectInterface ? $subject->getWorkflowContext() : [];
+        $data    = $this->ocr($url, $context);
+
+        return new TaskResult(
+            claims: $this->claimMapper->map($data, Claim::PRED_OCR_TEXT),
+            meta: new RunMeta(
+                model: 'mistral-ocr-latest',
+                response: $data,
+            ),
+        );
+    }
+
+    /**
+     * Run Mistral OCR for a single image/PDF URL and return the normalized data
+     * blob (text, layout_blocks, image_blocks, per-page markdown, raw_response).
+     *
+     * Subject-free entry point so callers (e.g. the S3 sidecar cache) can run
+     * OCR from a bare URL without a workflow subject. {@see run()} delegates here.
+     *
+     * @param array<string, mixed> $context optional hints, e.g. ['max_pages' => 3]
+     *
+     * @return array<string, mixed>
+     */
+    public function ocr(string $url, array $context = []): array
+    {
         $maxPages = (int) ($context['max_pages'] ?? 0);
         $isPdf    = $this->isPdf($url);
-        $document = $this->documentPayload($url, $isPdf);
 
         $payload = [
-            'model'                       => 'mistral-ocr-latest',
-            'document'                    => $document,
-            'include_image_base64'        => true,
-            'document_annotation_format'  => self::LAYOUT_SCHEMA,
+            'model'                      => 'mistral-ocr-latest',
+            'document'                   => $this->documentPayload($url, $isPdf),
+            'include_image_base64'       => true,
+            'document_annotation_format' => self::LAYOUT_SCHEMA,
         ];
 
         if ($isPdf && $maxPages > 0) {
@@ -111,16 +134,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
             'timeout' => 300,
         ]);
 
-        $data = $this->normalizeResponse($response->toArray());
-
-        return new TaskResult(
-            claims: $this->claimMapper->map($data, Claim::PRED_OCR_TEXT),
-            meta: new RunMeta(
-                model: 'mistral-ocr-latest',
-                prompt: json_encode($payload, JSON_THROW_ON_ERROR),
-                response: $data,
-            ),
-        );
+        return $this->normalizeResponse($response->toArray());
     }
 
     private function documentPayload(string $url, bool $isPdf): array

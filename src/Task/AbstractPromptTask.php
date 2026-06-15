@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle\Task;
 
 use Survos\ClaimsBundle\Service\RunMeta;
-use Survos\AiWorkflowBundle\Contract\AiThumbnailProviderInterface;
-use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\TextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\AiThumbnailProviderInterface;
+use Survos\DataContracts\Workflow\ContextSubjectInterface;
+use Survos\DataContracts\Workflow\ImageSubjectInterface;
+use Survos\DataContracts\Workflow\TextSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Content\Image;
 use Symfony\AI\Platform\Message\Content\ImageUrl;

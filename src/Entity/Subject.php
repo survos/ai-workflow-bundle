@@ -6,9 +6,9 @@ namespace Survos\AiWorkflowBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Survos\AiWorkflowBundle\Contract\ContextSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\ImageSubjectInterface;
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\ContextSubjectInterface;
+use Survos\DataContracts\Workflow\ImageSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Repository\SubjectRepository;
 use Survos\DataContracts\Dto\Item\BaseItemDto;
 use Survos\DataContracts\Dto\Item\GenericItemDto;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Workflow;
 
-use Survos\AiWorkflowBundle\Contract\WorkflowSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\StateBundle\Attribute\Place;
 use Survos\StateBundle\Attribute\Transition;
 use Survos\StateBundle\Attribute\Workflow;
