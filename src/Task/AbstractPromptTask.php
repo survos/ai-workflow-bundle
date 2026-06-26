@@ -288,7 +288,14 @@ abstract class AbstractPromptTask implements TaskInterface
         $stripped = preg_replace('/\s*```\s*$/', '', $stripped ?? (string) $content);
         $decoded = json_decode(trim($stripped ?? (string) $content), true);
 
-        return is_array($decoded) ? $decoded : ['raw' => (string) $content];
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+
+        // A model that returns a bare JSON string (e.g. htr_annotate emits a quoted "<hw>…</hw>")
+        // decodes to a string — use the DECODED text, not the quoted/escaped original, so callers
+        // get clean content (no literal \n / \/ leaking into claims).
+        return ['raw' => is_string($decoded) ? $decoded : (string) $content];
     }
 
     /**
