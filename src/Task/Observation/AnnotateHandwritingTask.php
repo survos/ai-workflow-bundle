@@ -33,6 +33,11 @@ final class AnnotateHandwritingTask extends AbstractPromptTask implements ImageT
 
     protected function claimsFromData(array $data): array
     {
+        // The prompt returns PLAIN annotated text (no JSON), so AbstractPromptTask wraps it as
+        // ['raw' => ...]. Surface it as `annotated_text` — the field TaskClaimMapper folds into the
+        // text predicate — otherwise the <hw>-marked transcription never becomes an ai:htrText claim.
+        $data['annotated_text'] ??= $data['raw'] ?? null;
+
         return $this->claimMapper->map($data, Claim::PRED_HTR_TEXT);
     }
 }
