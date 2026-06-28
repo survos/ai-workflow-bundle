@@ -56,6 +56,9 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
             'date'       => $context['date']        ?? null,
             'creator'    => $context['creator']     ?? null,
             'collection' => $context['collection']  ?? null,
+            // Sourced place of capture (catalog, NOT file EXIF) — grounds sign/word transcription
+            // toward the location's language (e.g. Hungarian, not Cyrillic, for a Hungarian sign).
+            'location'   => trim(implode(', ', array_filter([$context['city'] ?? null, $context['country'] ?? null]))) ?: null,
         ]);
 
         $availableSteps = array_keys(

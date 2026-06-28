@@ -26,4 +26,14 @@ Analysis tasks you may add to `analysis_tasks` based on content type:
 </existing_metadata>
 {% endif %}
 
+{% if existingMetadata.location is defined and existingMetadata.location %}
+<objective_grounding>
+The location and date in existing_metadata are sourced catalog facts about when and where the
+photograph was taken — NOT file EXIF (a scanned negative's EXIF reflects digitization, not capture).
+Use them only to GROUND your reading, never to override what is visually present: transcribe any
+text, signs, or place-names visible in the image in the language(s) of {{ existingMetadata.location }}
+(e.g. Hungarian for Hungary) — do not default to Cyrillic or another script unless unmistakably present.
+</objective_grounding>
+{% endif %}
+
 Observe the image and return the JSON envelope described in your instructions.
