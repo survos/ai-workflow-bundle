@@ -24,7 +24,8 @@
         "symfony/ai-agent": "^0.11",
         "symfony/ai-open-ai-platform": "^0.11",
         "symfony/ai-mistral-platform": "^0.11",
-        "survos/data-contracts": "^2.5"
+        "survos/data-contracts": "^2.5",
+        "aws/aws-sdk-php": "^3.388"
     },
     "suggest": {
         "survos/imgproxy-bundle": "Signed imgproxy URL generation — implement AiThumbnailProviderInterface using ImgproxyUrlBuilder"
