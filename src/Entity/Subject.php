@@ -16,6 +16,8 @@ use Survos\DataContracts\Vocabulary\ItemField;
 use Survos\FieldBundle\Attribute\EntityMeta;
 use Survos\FieldBundle\Attribute\RouteIdentity;
 use Survos\FieldBundle\Entity\RouteIdentityTrait;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
+use Survos\AiWorkflowBundle\Traits\PendingStepsTrait;
 use Survos\StateBundle\Traits\MarkingInterface;
 use Survos\StateBundle\Traits\MarkingTrait;
 use Symfony\Component\Uid\Ulid;
@@ -31,9 +33,10 @@ use Symfony\Component\Uid\Ulid;
 #[ORM\UniqueConstraint(name: 'uniq_subject', fields: ['scope', 'subjectType', 'subjectId'])]
 #[EntityMeta(icon: 'mdi:dots-circle', group: 'AI Workflow', label: 'Subjects')]
 #[RouteIdentity(field: 'id')]
-class Subject implements WorkflowSubjectInterface, MarkingInterface, ImageSubjectInterface, ContextSubjectInterface
+class Subject implements WorkflowSubjectInterface, MarkingInterface, PendingStepsInterface, ImageSubjectInterface, ContextSubjectInterface
 {
     use MarkingTrait;
+    use PendingStepsTrait;
     use RouteIdentityTrait;
 
     #[ORM\Id]

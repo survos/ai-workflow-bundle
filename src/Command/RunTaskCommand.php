@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Survos\ClaimsBundle\Service\ClaimIngestor;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
 use Survos\AiWorkflowBundle\Task\TaskRunner;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Symfony\Component\Console\Attribute\Argument;
@@ -181,7 +182,7 @@ final class RunTaskCommand
                 meta: $result->meta,
             );
 
-            if ($result->appendTasks !== []) {
+            if ($result->appendTasks !== [] && $entityObj instanceof PendingStepsInterface) {
                 foreach ($result->appendTasks as $step) {
                     $entityObj->addPendingStep($step, SubjectFlow::TRANSITION_OBSERVE);
                 }

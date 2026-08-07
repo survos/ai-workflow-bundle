@@ -12,6 +12,7 @@ use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\StateBundle\Traits\MarkingInterface;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 
 final class TaskRunner
@@ -23,7 +24,7 @@ final class TaskRunner
     ) {
     }
 
-    public function runNext(WorkflowSubjectInterface&MarkingInterface $subject, string $phase = SubjectFlow::TRANSITION_OBSERVE): ?string
+    public function runNext(WorkflowSubjectInterface&MarkingInterface&PendingStepsInterface $subject, string $phase = SubjectFlow::TRANSITION_OBSERVE): ?string
     {
         if ($subject->isWorkflowLocked()) {
             return null;
