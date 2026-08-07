@@ -39,11 +39,11 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * whatever a future Story/segment model (musdig#24) ends up needing; nothing here builds
  * that model, it just doesn't throw the data away.
  *
- * NOTE: written without a provisioned ASSEMBLYAI_API_KEY to test against — the HTTP
- * shape (endpoint paths, `authorization` header, `speaker_labels`/`utterances` field
- * names) matches AssemblyAI's documented v2 API as of this writing, but verify against
- * a real transcript once a key is added; this has been lint/wiring-checked, not
- * live-called.
+ * Verified live 2026-08-07 against a real ASSEMBLYAI_API_KEY (ssai's narration
+ * smoke test, via mediary/AssetAiExecutor): real submit-then-poll, real transcript,
+ * real per-word `words[]` (start/end ms, confidence, speaker) alongside `utterances`.
+ * Called directly (bypassing AssetAiExecutor) this only exercises the HTTP call, not
+ * the sidecar cache -- see AssetAiExecutor::run() for the cached path.
  */
 #[AsTask(
     'AssemblyAI speech-to-text with speaker diarization — for audio/video interviews.',
