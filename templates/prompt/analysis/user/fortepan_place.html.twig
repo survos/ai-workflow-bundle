@@ -1,0 +1,16 @@
+Infer where this photo was taken — PLACE, one of Fortepan IA's curation criteria: "a city or town, but also a point of interest, like a library, a bakery, a school."
+
+Base this entirely on the observation evidence above (prose description and transcribed text) — you do not have the image itself. Look specifically for:
+
+- A named town, city, or region stated or implied in the text
+- A point of interest: the name of a business, school, library, train/transit station, landmark, or similar
+- Clues in transcribed text: a postmark, a return address, a sign, a printed caption, a letterhead
+- Do NOT guess from generic visual description alone ("a street scene", "a rural setting") — that is not evidence of a specific place, it's just a scene type.
+
+{% if transcription %}
+<transcribed_text>
+{{ transcription is iterable ? transcription|json_encode(constant('JSON_PRETTY_PRINT')) : transcription }}
+</transcribed_text>
+{% endif %}
+
+If nothing in the evidence names or clearly implies a specific place, omit `place` entirely rather than guessing from vibes. A weak-but-real clue is still worth reporting at `confidence: "low"` — that's different from having no clue at all.
