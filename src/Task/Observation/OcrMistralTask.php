@@ -26,6 +26,37 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
 
     public const string TASK = 'ocr_mistral';
 
+    /**
+     * Pinned, not `mistral-ocr-latest`: OCR 4.x returns native paragraph-level blocks (type +
+     * bbox + confidence), and an alias silently changing model underneath a corpus changes its
+     * text. Override per call with $context['model'].
+     */
+    public const string MODEL = 'mistral-ocr-4-1';
+
+    /**
+     * Local images wider than this are downscaled before upload. 3000px was too small for
+     * newspaper broadsheets: small type fell below legibility and the model filled the gaps with
+     * invented text. Override with $context['max_image_width'].
+     */
+    private const int MAX_IMAGE_WIDTH = 6000;
+
+    /**
+     * Native OCR 4.x block type → the layout_blocks vocabulary consumers already speak
+     * (folio's layout renderer, ssai). The original type is kept as `nativeType`.
+     */
+    private const array NATIVE_TYPES = [
+        'text'       => 'paragraph',
+        'caption'    => 'caption',
+        'image'      => 'image',
+        'table'      => 'table',
+        'list'       => 'paragraph',
+        'header'     => 'header',
+        'footer'     => 'footer',
+        'aside_text' => 'aside',
+        'equation'   => 'other',
+        'signature'  => 'other',
+    ];
+
     private const LAYOUT_SCHEMA = [
         'type' => 'json_schema',
         'json_schema' => [
@@ -74,9 +105,9 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
     public function getMeta(): array
     {
         return [
-            'agent'    => 'mistral-ocr-latest',
+            'agent'    => self::MODEL,
             'platform' => 'mistral',
-            'model'    => 'mistral-ocr-latest',
+            'model'    => self::MODEL,
         ];
     }
 
@@ -92,7 +123,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
         return new TaskResult(
             claims: $this->claimMapper->map($data, Claim::PRED_OCR_TEXT),
             meta: new RunMeta(
-                model: 'mistral-ocr-latest',
+                model: (string) ($data['model'] ?? self::MODEL),
                 response: $data,
             ),
         );
@@ -105,7 +136,16 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
      * Subject-free entry point so callers (e.g. the S3 sidecar cache) can run
      * OCR from a bare URL without a workflow subject. {@see run()} delegates here.
      *
-     * @param array<string, mixed> $context optional hints, e.g. ['max_pages' => 3]
+     * Layout comes from OCR 4.x's native blocks (type, bbox, confidence) — cheap and measured,
+     * not an LLM's guess. The old document_annotation layout schema is opt-in for models that
+     * predate native blocks.
+     *
+     * @param array<string, mixed> $context optional hints:
+     *   - max_pages: int, first N pages of a PDF
+     *   - model: string, override {@see self::MODEL}
+     *   - max_image_width: int, downscale local images wider than this
+     *   - layout_annotation: bool, also request the LLM layout annotation (legacy)
+     *   - document_annotation_format: array, a caller's own JSON schema (e.g. masthead metadata)
      *
      * @return array<string, mixed>
      */
@@ -115,11 +155,17 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
         $isPdf    = $this->isPdf($url);
 
         $payload = [
-            'model'                      => 'mistral-ocr-latest',
-            'document'                   => $this->documentPayload($url, $isPdf),
-            'include_image_base64'       => true,
-            'document_annotation_format' => self::LAYOUT_SCHEMA,
+            'model'                         => (string) ($context['model'] ?? self::MODEL),
+            'document'                      => $this->documentPayload($url, $isPdf, (int) ($context['max_image_width'] ?? self::MAX_IMAGE_WIDTH)),
+            'include_image_base64'          => false,
+            'include_blocks'                => true,
+            'confidence_scores_granularity' => 'block',
         ];
+        if (isset($context['document_annotation_format']) && is_array($context['document_annotation_format'])) {
+            $payload['document_annotation_format'] = $context['document_annotation_format'];
+        } elseif (($context['layout_annotation'] ?? false) === true) {
+            $payload['document_annotation_format'] = self::LAYOUT_SCHEMA;
+        }
 
         if ($isPdf && $maxPages > 0) {
             $payload['pages'] = range(0, $maxPages - 1);
@@ -137,7 +183,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
         return $this->normalizeResponse($response->toArray());
     }
 
-    private function documentPayload(string $url, bool $isPdf): array
+    private function documentPayload(string $url, bool $isPdf, int $maxImageWidth = self::MAX_IMAGE_WIDTH): array
     {
         if (!str_starts_with($url, 'file://')) {
             return $isPdf
@@ -146,7 +192,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
         }
 
         $path   = substr($url, 7);
-        $binary = $isPdf ? file_get_contents($path) : $this->resizeIfNeeded($path, 3000);
+        $binary = $isPdf ? file_get_contents($path) : $this->resizeIfNeeded($path, $maxImageWidth);
         if ($binary === false) {
             throw new \RuntimeException(sprintf('Cannot read local %s: %s', $isPdf ? 'PDF' : 'image', $path));
         }
@@ -164,15 +210,26 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
             $pages,
         ));
 
-        $layoutBlocks   = [];
-        $topAnnotation  = $data['document_annotation'] ?? null;
-        if (is_string($topAnnotation) && isset($pages[0])) {
-            $layoutBlocks = array_merge($layoutBlocks, $this->parseAnnotation($topAnnotation, $pages[0], 0));
-        }
+        // Native OCR 4.x blocks first; the LLM annotation only when no page carried native blocks
+        // (an older model, or a caller that opted into layout_annotation on one).
+        $layoutBlocks = [];
         foreach ($pages as $pageData) {
-            $pageAnnotation = $pageData['document_annotation'] ?? null;
-            if (is_string($pageAnnotation)) {
-                $layoutBlocks = array_merge($layoutBlocks, $this->parseAnnotation($pageAnnotation, $pageData, $pageData['index'] ?? 0));
+            foreach ($pageData['blocks'] ?? [] as $block) {
+                if (is_array($block)) {
+                    $layoutBlocks[] = $this->nativeBlock($block, (int) ($pageData['index'] ?? 0));
+                }
+            }
+        }
+        if ($layoutBlocks === []) {
+            $topAnnotation = $data['document_annotation'] ?? null;
+            if (is_string($topAnnotation) && isset($pages[0])) {
+                $layoutBlocks = array_merge($layoutBlocks, $this->parseAnnotation($topAnnotation, $pages[0], 0));
+            }
+            foreach ($pages as $pageData) {
+                $pageAnnotation = $pageData['document_annotation'] ?? null;
+                if (is_string($pageAnnotation)) {
+                    $layoutBlocks = array_merge($layoutBlocks, $this->parseAnnotation($pageAnnotation, $pageData, $pageData['index'] ?? 0));
+                }
             }
         }
 
@@ -198,6 +255,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
         }
 
         return [
+            'model'         => $data['model'] ?? null,
             'text'          => trim($fullText),
             'language'      => null,
             'confidence'    => 'high',
@@ -210,9 +268,44 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
                 'tables'     => $p['tables']     ?? [],
                 'header'     => $p['header']     ?? null,
                 'footer'     => $p['footer']     ?? null,
+                'confidence' => $p['confidence_scores']['average_page_confidence_score'] ?? null,
             ], $pages),
             'raw_response'  => $data,
         ];
+    }
+
+    /**
+     * One native OCR 4.x block in the layout_blocks shape: {page, type, text, bbox{x,y,width,height}}
+     * in the page's own pixel space (pages[].dimensions), plus nativeType and confidence.
+     * A `title` becomes headline or subheadline by its markdown heading depth.
+     *
+     * @param array<string, mixed> $block a pages[].blocks[] entry
+     *
+     * @return array<string, mixed>
+     */
+    private function nativeBlock(array $block, int $pageIndex): array
+    {
+        $native = (string) ($block['type'] ?? 'text');
+        $text   = (string) ($block['content'] ?? '');
+        $type   = $native === 'title'
+            ? (preg_match('/^\s*#{2,}\s/', $text) === 1 ? 'subheadline' : 'headline')
+            : (self::NATIVE_TYPES[$native] ?? 'other');
+        $x1 = (int) ($block['top_left_x'] ?? 0);
+        $y1 = (int) ($block['top_left_y'] ?? 0);
+
+        return array_filter([
+            'page'       => $pageIndex,
+            'type'       => $type,
+            'nativeType' => $native,
+            'text'       => $text,
+            'bbox'       => [
+                'x'      => $x1,
+                'y'      => $y1,
+                'width'  => max(0, (int) ($block['bottom_right_x'] ?? $x1) - $x1),
+                'height' => max(0, (int) ($block['bottom_right_y'] ?? $y1) - $y1),
+            ],
+            'confidence' => $block['confidence_scores']['average_content_confidence_score'] ?? null,
+        ], static fn (mixed $v): bool => $v !== null);
     }
 
     private function parseAnnotation(string $rawAnnotation, array $pageData, int $pageIndex): array
