@@ -10,6 +10,7 @@ use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\AsTask;
+use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
@@ -20,7 +21,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[AsTask('Dense-print OCR via Mistral — for typed/printed text, newspapers, tables, and certificates.', self::class, produces: ['ai:ocrText', 'ai:layoutBlock'], samples: ['https://s3.amazonaws.com/pastperfectonline/images/museum_986/006/20100110001.jpg'])]
-final class OcrMistralTask implements TaskInterface, ImageTaskInterface, ObservationTaskInterface
+final class OcrMistralTask implements TaskInterface, ImageTaskInterface, ObservationTaskInterface, BatchableTaskInterface
 {
     use TaskNameTrait;
 
@@ -113,13 +114,48 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
 
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
+        [$url, $context] = $this->input($subject);
+
+        return $this->result($this->ocr($url, $context));
+    }
+
+    public function batchProvider(): string
+    {
+        return 'mistral';
+    }
+
+    /** Mistral's batch workers fetch the image themselves: only a public http(s) URL can go. */
+    public function supportsBatch(WorkflowSubjectInterface $subject): bool
+    {
+        return $this->supports($subject)
+            && preg_match('#^https?://#i', (string) $subject->getWorkflowImageUrl()) === 1;
+    }
+
+    public function batchRequest(WorkflowSubjectInterface $subject): array
+    {
+        [$url, $context] = $this->input($subject);
+
+        return ['endpoint' => '/v1/ocr', 'body' => $this->payload($url, $context)];
+    }
+
+    public function batchResult(WorkflowSubjectInterface $subject, array $responseBody): TaskResult
+    {
+        return $this->result($this->normalizeResponse($responseBody));
+    }
+
+    /** @return array{0: string, 1: array<string, mixed>} */
+    private function input(WorkflowSubjectInterface $subject): array
+    {
         if (!$subject instanceof ImageSubjectInterface || ($url = $subject->getWorkflowImageUrl()) === null) {
             throw new \RuntimeException('OcrMistralTask requires an ImageSubjectInterface with an image URL.');
         }
 
-        $context = $subject instanceof ContextSubjectInterface ? $subject->getWorkflowContext() : [];
-        $data    = $this->ocr($url, $context);
+        return [$url, $subject instanceof ContextSubjectInterface ? $subject->getWorkflowContext() : []];
+    }
 
+    /** @param array<string, mixed> $data normalized, see normalizeResponse() */
+    private function result(array $data): TaskResult
+    {
         return new TaskResult(
             claims: $this->claimMapper->map($data, Claim::PRED_OCR_TEXT),
             meta: new RunMeta(
@@ -151,6 +187,27 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
      */
     public function ocr(string $url, array $context = []): array
     {
+        $response = $this->httpClient->request('POST', 'https://api.mistral.ai/v1/ocr', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->mistralApiKey,
+                'Content-Type'  => 'application/json',
+            ],
+            'json'    => $this->payload($url, $context),
+            'timeout' => 300,
+        ]);
+
+        return $this->normalizeResponse($response->toArray());
+    }
+
+    /**
+     * The /v1/ocr request body -- one builder for the sync call and the batch line.
+     *
+     * @param array<string, mixed> $context see {@see ocr()}
+     *
+     * @return array<string, mixed>
+     */
+    private function payload(string $url, array $context): array
+    {
         $maxPages = (int) ($context['max_pages'] ?? 0);
         $isPdf    = $this->isPdf($url);
 
@@ -171,16 +228,7 @@ final class OcrMistralTask implements TaskInterface, ImageTaskInterface, Observa
             $payload['pages'] = range(0, $maxPages - 1);
         }
 
-        $response = $this->httpClient->request('POST', 'https://api.mistral.ai/v1/ocr', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->mistralApiKey,
-                'Content-Type'  => 'application/json',
-            ],
-            'json'    => $payload,
-            'timeout' => 300,
-        ]);
-
-        return $this->normalizeResponse($response->toArray());
+        return $payload;
     }
 
     private function documentPayload(string $url, bool $isPdf, int $maxImageWidth = self::MAX_IMAGE_WIDTH): array
