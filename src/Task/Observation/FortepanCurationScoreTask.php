@@ -58,7 +58,11 @@ final class FortepanCurationScoreTask extends AbstractPromptTask implements Imag
             'originalityScore' => 'fortepan:originalityScore',
         ] as $key => $predicate) {
             if (isset($data[$key]) && is_numeric($data[$key])) {
-                $claims[] = new RawClaim($predicate, (int) $data[$key], basis: $data['rationale'] ?? null);
+                // Each score's own reason is its basis; the shared rationale only when a reason
+                // is missing (results scored before per-criterion reasons existed).
+                $reason = $data[substr($key, 0, -strlen('Score')) . 'Reason'] ?? null;
+                $basis = is_string($reason) && trim($reason) !== '' ? $reason : ($data['rationale'] ?? null);
+                $claims[] = new RawClaim($predicate, (int) $data[$key], basis: $basis);
             }
         }
 

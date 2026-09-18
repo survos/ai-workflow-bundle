@@ -45,8 +45,34 @@ final class FortepanCurationScoreResult implements \JsonSerializable
         /** How unusual or distinctive this image is relative to typical archive submissions -- not a duplicate/near-duplicate of a common shot type. */
         public readonly int $originalityScore = 0,
 
-        /** One or two sentences a curator can actually use: which score(s) this justifies and why, not a restatement of the visual description observe already produced. */
+        /** One or two sentences a curator can actually use: the overall call on this photo, not a restatement of the visual description observe already produced. */
         public readonly ?string $rationale = null,
+
+        // Per-criterion reasons: why THIS score, naming the specific evidence in the photo (the
+        // practice, the moment, the detail). A score alone is not actionable -- a curator asked
+        // "why is this culturally significant?" and the shared rationale could not say. Each
+        // becomes the `basis` of that score's claim.
+
+        /** Why actionScore: the story or situation, concretely. */
+        public readonly ?string $actionReason = null,
+
+        /** Why culturalPracticeScore: name the practice itself (e.g. "students serving punch at a small-town 1950s prom"), and what makes it specific rather than generic. */
+        public readonly ?string $culturalPracticeReason = null,
+
+        /** Why historicalSignificanceScore: the moment, era marker, or vantage point that carries it. */
+        public readonly ?string $historicalSignificanceReason = null,
+
+        /** Why captivatesScore: the particular detail, expression, light, or framing. */
+        public readonly ?string $captivatesReason = null,
+
+        /** Why inTheActScore: who holds the camera and where, or "no camera visible". */
+        public readonly ?string $inTheActReason = null,
+
+        /** Why qualityScore: focus/blur, exposure, damage, fading -- what specifically. */
+        public readonly ?string $qualityReason = null,
+
+        /** Why originalityScore: what sets it apart from (or makes it typical of) archive submissions. */
+        public readonly ?string $originalityReason = null,
     ) {
     }
 
@@ -61,6 +87,13 @@ final class FortepanCurationScoreResult implements \JsonSerializable
             'qualityScore' => $this->qualityScore,
             'originalityScore' => $this->originalityScore,
             'rationale' => $this->rationale,
+            'actionReason' => $this->actionReason,
+            'culturalPracticeReason' => $this->culturalPracticeReason,
+            'historicalSignificanceReason' => $this->historicalSignificanceReason,
+            'captivatesReason' => $this->captivatesReason,
+            'inTheActReason' => $this->inTheActReason,
+            'qualityReason' => $this->qualityReason,
+            'originalityReason' => $this->originalityReason,
         ], static fn ($v) => $v !== null);
     }
 }

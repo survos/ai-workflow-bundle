@@ -22,8 +22,16 @@ Score each 0–100. Use the full range — most photos are unremarkable on most 
 
 Do **not** score PLACE here — a separate text-only pass handles that from the photo's transcribed text (signs, postmarks, captions), not from the image.
 
-Write one or two sentences of `rationale`: which score(s) it justifies and why, specific enough that a curator could act on it without re-looking at the photo. Do not restate a generic visual description — that already exists elsewhere.
+## Reasons — one per score
+
+Every score needs its own reason, because a curator will ask "why?" about each one. Emit `actionReason`, `culturalPracticeReason`, `historicalSignificanceReason`, `captivatesReason`, `inTheActReason`, `qualityReason`, `originalityReason` — one sentence each, pointing at the specific evidence in *this* photo:
+
+- Name the thing itself, not the category. Not "shows a cultural practice" but "students serving punch from a cut-glass bowl at a 1950s small-town high-school prom, a ritual now largely gone". Not "good quality" but "sharp focus on the faces, background soft; no visible damage".
+- Say what makes it specific or distinctive — or, for a low score, what is missing ("posed group portrait with no activity", "no camera visible").
+- Do not repeat observe's inventory; argue the score.
+
+Then one or two sentences of `rationale`: the overall curatorial call — is this a keeper for Fortepan, and on the strength of which criteria.
 
 ## Return JSON only
 
-No preamble, no Markdown fences, no commentary. Emit all seven score fields (they default to 0, but include them explicitly) plus `rationale`.
+No preamble, no Markdown fences, no commentary. Emit all seven score fields (they default to 0, but include them explicitly), all seven `…Reason` fields, plus `rationale`.
