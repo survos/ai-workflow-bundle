@@ -48,31 +48,31 @@ final class FortepanCurationScoreResult implements \JsonSerializable
         /** One or two sentences a curator can actually use: the overall call on this photo, not a restatement of the visual description observe already produced. */
         public readonly ?string $rationale = null,
 
-        // Per-criterion reasons: why THIS score, naming the specific evidence in the photo (the
-        // practice, the moment, the detail). A score alone is not actionable -- a curator asked
-        // "why is this culturally significant?" and the shared rationale could not say. Each
-        // becomes the `basis` of that score's claim.
+        // Evidence basis per score -- the same <field>Basis convention as MetadataResult: why THIS
+        // score, naming the specific evidence in the photo (the practice, the moment, the detail).
+        // A curator asked "why is this culturally significant?" and one shared rationale could not
+        // say. Each becomes the `basis` of that score's claim.
 
         /** Why actionScore: the story or situation, concretely. */
-        public readonly ?string $actionReason = null,
+        public readonly ?string $actionBasis = null,
 
         /** Why culturalPracticeScore: name the practice itself (e.g. "students serving punch at a small-town 1950s prom"), and what makes it specific rather than generic. */
-        public readonly ?string $culturalPracticeReason = null,
+        public readonly ?string $culturalPracticeBasis = null,
 
         /** Why historicalSignificanceScore: the moment, era marker, or vantage point that carries it. */
-        public readonly ?string $historicalSignificanceReason = null,
+        public readonly ?string $historicalSignificanceBasis = null,
 
         /** Why captivatesScore: the particular detail, expression, light, or framing. */
-        public readonly ?string $captivatesReason = null,
+        public readonly ?string $captivatesBasis = null,
 
         /** Why inTheActScore: who holds the camera and where, or "no camera visible". */
-        public readonly ?string $inTheActReason = null,
+        public readonly ?string $inTheActBasis = null,
 
         /** Why qualityScore: focus/blur, exposure, damage, fading -- what specifically. */
-        public readonly ?string $qualityReason = null,
+        public readonly ?string $qualityBasis = null,
 
         /** Why originalityScore: what sets it apart from (or makes it typical of) archive submissions. */
-        public readonly ?string $originalityReason = null,
+        public readonly ?string $originalityBasis = null,
     ) {
     }
 
@@ -87,13 +87,13 @@ final class FortepanCurationScoreResult implements \JsonSerializable
             'qualityScore' => $this->qualityScore,
             'originalityScore' => $this->originalityScore,
             'rationale' => $this->rationale,
-            'actionReason' => $this->actionReason,
-            'culturalPracticeReason' => $this->culturalPracticeReason,
-            'historicalSignificanceReason' => $this->historicalSignificanceReason,
-            'captivatesReason' => $this->captivatesReason,
-            'inTheActReason' => $this->inTheActReason,
-            'qualityReason' => $this->qualityReason,
-            'originalityReason' => $this->originalityReason,
+            'actionBasis' => $this->actionBasis,
+            'culturalPracticeBasis' => $this->culturalPracticeBasis,
+            'historicalSignificanceBasis' => $this->historicalSignificanceBasis,
+            'captivatesBasis' => $this->captivatesBasis,
+            'inTheActBasis' => $this->inTheActBasis,
+            'qualityBasis' => $this->qualityBasis,
+            'originalityBasis' => $this->originalityBasis,
         ], static fn ($v) => $v !== null);
     }
 }

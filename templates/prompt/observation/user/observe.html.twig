@@ -1,3 +1,4 @@
+{% autoescape false %}
 {% if availableSteps %}
 <available_observation_tasks>
 Follow-up image tasks you may add to `pending_steps` if high-res processing is warranted:
@@ -37,3 +38,4 @@ text, signs, or place-names visible in the image in the language(s) of {{ existi
 {% endif %}
 
 Observe the image and return the JSON envelope described in your instructions.
+{% endautoescape %}

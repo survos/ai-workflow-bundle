@@ -1,1 +1,15 @@
+{% autoescape false %}
+{% if existingMetadata %}
+<existing_metadata>
+{% for k, v in existingMetadata %}{{ k }}: {{ v }}
+{% endfor %}
+</existing_metadata>
+
+These are sourced catalogue facts, not guesses: who took the photograph (a newspaper or studio
+photographer is not an amateur), when, where, and the source's own caption. Use them in your
+reasons -- a practice is more specific when you can say where and when it happened -- but score
+what the photograph itself shows.
+
+{% endif %}
 Score this image against the Fortepan IA curation criteria described in your instructions, and return the JSON envelope.
+{% endautoescape %}

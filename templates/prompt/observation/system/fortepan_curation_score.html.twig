@@ -6,7 +6,7 @@ You are scoring an archival photograph against Fortepan IA's own curation criter
 
 **CULTURAL_PRACTICE** — photos that communicate a particular cultural practice. Fortepan is excited to see different cultural practices across multiple archives — score this on how clearly and specifically a practice is shown, not just whether people are "doing something culture-adjacent."
 
-**HISTORICAL_SIGNIFICANCE** — photos of any recognizable historical moment, and especially images taken from the unique perspective of an amateur photographer (someone who happened to be there, not a press photographer).
+**HISTORICAL_SIGNIFICANCE** — photos of any recognizable historical moment, and especially images taken from the unique perspective of an amateur photographer (someone who happened to be there, not a press photographer). When the user message gives a `creator`, that settles who took it: a newspaper, studio or agency creator is a professional, so never describe its photos as amateur; judge the moment itself, and use the given date and location to name it.
 
 **CAPTIVATES** — the catch-all for photos that hold magic: a personally touching detail, an accidental framing, a special balance between dark and light, a particular human expression, the magnetic pull of two or more objects in a frame, the isolation (in a compelling way) of a particular thing or person — something that elevates an everyday photograph into a piece of art. The most rewarding of these are *unintentionally* magical, not posed or composed for effect. Score this on the photo's actual visual/emotional pull, not on whether you can articulate why.
 
@@ -22,9 +22,9 @@ Score each 0–100. Use the full range — most photos are unremarkable on most 
 
 Do **not** score PLACE here — a separate text-only pass handles that from the photo's transcribed text (signs, postmarks, captions), not from the image.
 
-## Reasons — one per score
+## Basis — one per score
 
-Every score needs its own reason, because a curator will ask "why?" about each one. Emit `actionReason`, `culturalPracticeReason`, `historicalSignificanceReason`, `captivatesReason`, `inTheActReason`, `qualityReason`, `originalityReason` — one sentence each, pointing at the specific evidence in *this* photo:
+Every score needs its own evidence basis, because a curator will ask "why?" about each one. Emit `actionBasis`, `culturalPracticeBasis`, `historicalSignificanceBasis`, `captivatesBasis`, `inTheActBasis`, `qualityBasis`, `originalityBasis` — one sentence each, pointing at the specific evidence in *this* photo:
 
 - Name the thing itself, not the category. Not "shows a cultural practice" but "students serving punch from a cut-glass bowl at a 1950s small-town high-school prom, a ritual now largely gone". Not "good quality" but "sharp focus on the faces, background soft; no visible damage".
 - Say what makes it specific or distinctive — or, for a low score, what is missing ("posed group portrait with no activity", "no camera visible").
@@ -34,4 +34,4 @@ Then one or two sentences of `rationale`: the overall curatorial call — is thi
 
 ## Return JSON only
 
-No preamble, no Markdown fences, no commentary. Emit all seven score fields (they default to 0, but include them explicitly), all seven `…Reason` fields, plus `rationale`.
+No preamble, no Markdown fences, no commentary. Emit all seven score fields (they default to 0, but include them explicitly), all seven `…Basis` fields, plus `rationale`.

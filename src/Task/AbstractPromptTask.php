@@ -203,6 +203,36 @@ abstract class AbstractPromptTask implements TaskInterface
      * @param array<string, mixed> $context
      * @return array<string, mixed>
      */
+    /**
+     * The item's catalogue facts -- who made it, when, where, and its own caption -- as the
+     * producer asserted them (mediary passes its source claims in the task context). They are
+     * the "known" half of an observation: sourced, NOT file EXIF (a scanned negative's EXIF is
+     * about the scan). Tasks show them to the model to ground its reading, never to override
+     * what is visible.
+     *
+     * @param array<string,mixed> $context
+     * @return array<string,string>
+     */
+    protected function knownFacts(array $context): array
+    {
+        $join = static fn (mixed $v): ?string => is_array($v)
+            ? (implode('; ', array_filter(array_map('strval', $v), static fn (string $s): bool => trim($s) !== '')) ?: null)
+            : (is_scalar($v) && trim((string) $v) !== '' ? (string) $v : null);
+
+        return array_filter([
+            'title'       => $join($context['title'] ?? null),
+            'caption'     => $join($context['caption'] ?? null),
+            'description' => $join($context['description'] ?? null),
+            'date'        => $join($context['date'] ?? null),
+            'creator'     => $join($context['creator'] ?? null),
+            'collection'  => $join($context['collection'] ?? null),
+            // Sourced place of capture -- grounds sign/word transcription toward the location's
+            // language (e.g. Hungarian, not Cyrillic, for a Hungarian sign).
+            'location'    => $join($context['place'] ?? null)
+                ?? (trim(implode(', ', array_filter([$context['city'] ?? null, $context['country'] ?? null]))) ?: null),
+        ], static fn (?string $v): bool => $v !== null);
+    }
+
     protected function promptContext(array $inputs, array $context = []): array
     {
         return [
