@@ -68,12 +68,14 @@ final class FortepanCurationScoreTask extends AbstractPromptTask implements Imag
             'inTheActScore' => 'fortepan:inTheActScore',
             'qualityScore' => 'fortepan:qualityScore',
             'originalityScore' => 'fortepan:originalityScore',
+            'overallScore' => 'fortepan:overallScore',
         ] as $key => $predicate) {
             if (isset($data[$key]) && is_numeric($data[$key])) {
-                // Each score carries its own evidence basis (the same <field>Basis convention as
-                // MetadataResult); the shared rationale only for results scored before that.
-                $own = $data[substr($key, 0, -strlen('Score')) . 'Basis'] ?? null;
-                $basis = is_string($own) && trim($own) !== '' ? $own : ($data['rationale'] ?? null);
+                // Each score carries its own evidence basis (the <field>Basis convention of
+                // MetadataResult); the overall score's basis is the rationale. A 0 is not an
+                // assertion and carries none.
+                $own = $key === 'overallScore' ? ($data['rationale'] ?? null) : ($data[substr($key, 0, -strlen('Score')) . 'Basis'] ?? null);
+                $basis = (int) $data[$key] > 0 && is_string($own) && trim($own) !== '' ? $own : null;
                 $claims[] = new RawClaim($predicate, (int) $data[$key], basis: $basis);
             }
         }

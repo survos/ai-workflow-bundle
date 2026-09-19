@@ -45,13 +45,16 @@ final class FortepanCurationScoreResult implements \JsonSerializable
         /** How unusual or distinctive this image is relative to typical archive submissions -- not a duplicate/near-duplicate of a common shot type. */
         public readonly int $originalityScore = 0,
 
-        /** One or two sentences a curator can actually use: the overall call on this photo, not a restatement of the visual description observe already produced. */
+        /** The overall call: how strong a Fortepan keeper this photo is, weighing the criteria above (not their average). */
+        public readonly int $overallScore = 0,
+
+        /** Basis for overallScore: one or two sentences summarising which assertions carry it -- the curator's summary, not a restatement of observe's description. */
         public readonly ?string $rationale = null,
 
         // Evidence basis per score -- the same <field>Basis convention as MetadataResult: why THIS
         // score, naming the specific evidence in the photo (the practice, the moment, the detail).
-        // A curator asked "why is this culturally significant?" and one shared rationale could not
-        // say. Each becomes the `basis` of that score's claim.
+        // Only for positive assertions: a 0 needs no explanation, so its basis is null. Each
+        // becomes the `basis` of that score's claim.
 
         /** Why actionScore: the story or situation, concretely. */
         public readonly ?string $actionBasis = null,
@@ -86,6 +89,7 @@ final class FortepanCurationScoreResult implements \JsonSerializable
             'inTheActScore' => $this->inTheActScore,
             'qualityScore' => $this->qualityScore,
             'originalityScore' => $this->originalityScore,
+            'overallScore' => $this->overallScore,
             'rationale' => $this->rationale,
             'actionBasis' => $this->actionBasis,
             'culturalPracticeBasis' => $this->culturalPracticeBasis,

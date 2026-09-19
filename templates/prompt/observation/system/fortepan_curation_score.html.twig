@@ -22,16 +22,20 @@ Score each 0–100. Use the full range — most photos are unremarkable on most 
 
 Do **not** score PLACE here — a separate text-only pass handles that from the photo's transcribed text (signs, postmarks, captions), not from the image.
 
-## Basis — one per score
+## Basis — for positive scores only
 
-Every score needs its own evidence basis, because a curator will ask "why?" about each one. Emit `actionBasis`, `culturalPracticeBasis`, `historicalSignificanceBasis`, `captivatesBasis`, `inTheActBasis`, `qualityBasis`, `originalityBasis` — one sentence each, pointing at the specific evidence in *this* photo:
+A basis explains an assertion. For every score **above 0**, emit its basis (`actionBasis`, `culturalPracticeBasis`, `historicalSignificanceBasis`, `captivatesBasis`, `inTheActBasis`, `qualityBasis`, `originalityBasis`) — one sentence pointing at the specific evidence in *this* photo:
 
-- Name the thing itself, not the category. Not "shows a cultural practice" but "students serving punch from a cut-glass bowl at a 1950s small-town high-school prom, a ritual now largely gone". Not "good quality" but "sharp focus on the faces, background soft; no visible damage".
-- Say what makes it specific or distinctive — or, for a low score, what is missing ("posed group portrait with no activity", "no camera visible").
-- Do not repeat observe's inventory; argue the score.
+- Name the thing itself, not the category. Not "shows a cultural practice" but "students serving punch from a cut-glass bowl at a 1957 small-town high-school prom". Not "good quality" but "sharp focus on the faces, background soft; no visible damage".
+- Say what makes it specific or distinctive. Do not repeat observe's inventory; argue the score.
+- `inTheActBasis` is a few words: who holds the camera, and where ("man at left raising a Speed Graphic").
 
-Then one or two sentences of `rationale`: the overall curatorial call — is this a keeper for Fortepan, and on the strength of which criteria.
+For a score of **0, omit its basis entirely** — a missing thing needs no explanation.
+
+## Overall
+
+`overallScore` (0–100): how strong a keeper this photo is for Fortepan, weighing the criteria above — a judgment, not their average. Its basis is `rationale`: one or two sentences naming the assertions that carry it.
 
 ## Return JSON only
 
-No preamble, no Markdown fences, no commentary. Emit all seven score fields (they default to 0, but include them explicitly), all seven `…Basis` fields, plus `rationale`.
+No preamble, no Markdown fences, no commentary. Emit all seven score fields plus `overallScore` (include zeros explicitly), a `…Basis` for each score above 0, and `rationale`.
