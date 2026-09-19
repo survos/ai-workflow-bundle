@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\AiWorkflowBundle\Result\FortepanCurationScoreResult;
+use Survos\AiWorkflowBundle\Result\MeritScoreResult;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
+use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
+use Survos\AiWorkflowBundle\Task\TaskResult;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\ClaimsBundle\Service\RawClaim;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Fortepan IA's own curation criteria (survos-sites/ssai, Tac 2026-08-07), scored per photo:
+ * Merit criteria adapted from Fortepan Iowa's curation best practice (survos-sites/ssai, Tac
+ * 2026-08-07), scored per photo:
  * ACTION, CULTURAL_PRACTICE, HISTORICAL_SIGNIFICANCE, CAPTIVATES, IN_THE_ACT, plus
  * quality/originality. Image-based by design (Tac, same conversation) -- these all require
  * actually looking at the photo (composition, expression, condition, "is someone visibly
@@ -27,10 +31,10 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * image, which is why it lives under Observation/ rather than Analysis/ (directory reflects
  * ImageTaskInterface vs AnalysisTaskInterface, not evidence-vs-interpretation).
  */
-#[AsTask('Fortepan IA curation scoring (action, cultural practice, historical significance, captivates, in-the-act, quality, originality) -- requires the image.', self::class)]
-final class FortepanCurationScoreTask extends AbstractPromptTask implements ImageTaskInterface
+#[AsTask('Merit scoring of a vernacular photograph (action, cultural practice, historical significance, captivates, in-the-act, quality, originality, overall) with a basis per positive score -- criteria adapted from Fortepan Iowa. Requires the image.', self::class)]
+final class MeritScoreTask extends AbstractPromptTask implements ImageTaskInterface, BatchableTaskInterface
 {
-    public const string TASK = 'fortepan_curation_score';
+    public const string TASK = 'merit_score';
 
     public function __construct(
         #[Autowire(service: 'ai.agent.description')]
@@ -51,9 +55,32 @@ final class FortepanCurationScoreTask extends AbstractPromptTask implements Imag
         ];
     }
 
+    public function batchProvider(): string
+    {
+        return 'openai';
+    }
+
+    /** OpenAI fetches the image itself, so it must be a public http(s) URL (the imgproxy AI thumbnail is). */
+    public function supportsBatch(WorkflowSubjectInterface $subject): bool
+    {
+        $url = $this->inputs($subject)['image_url'] ?? null;
+
+        return $this->supports($subject) && is_string($url) && preg_match('#^https?://#i', $url) === 1;
+    }
+
+    public function batchRequest(WorkflowSubjectInterface $subject): array
+    {
+        return $this->chatBatchRequest($subject);
+    }
+
+    public function batchResult(WorkflowSubjectInterface $subject, array $responseBody): TaskResult
+    {
+        return $this->chatBatchResult($subject, $responseBody);
+    }
+
     protected function responseFormatClass(): string
     {
-        return FortepanCurationScoreResult::class;
+        return MeritScoreResult::class;
     }
 
     protected function claimsFromData(array $data): array
@@ -61,14 +88,14 @@ final class FortepanCurationScoreTask extends AbstractPromptTask implements Imag
         $claims = [];
 
         foreach ([
-            'actionScore' => 'fortepan:actionScore',
-            'culturalPracticeScore' => 'fortepan:culturalPracticeScore',
-            'historicalSignificanceScore' => 'fortepan:historicalSignificanceScore',
-            'captivatesScore' => 'fortepan:captivatesScore',
-            'inTheActScore' => 'fortepan:inTheActScore',
-            'qualityScore' => 'fortepan:qualityScore',
-            'originalityScore' => 'fortepan:originalityScore',
-            'overallScore' => 'fortepan:overallScore',
+            'actionScore' => 'merit:action',
+            'culturalPracticeScore' => 'merit:culturalPractice',
+            'historicalSignificanceScore' => 'merit:historicalSignificance',
+            'captivatesScore' => 'merit:captivates',
+            'inTheActScore' => 'merit:inTheAct',
+            'qualityScore' => 'merit:quality',
+            'originalityScore' => 'merit:originality',
+            'overallScore' => 'merit:overall',
         ] as $key => $predicate) {
             if (isset($data[$key]) && is_numeric($data[$key])) {
                 // Each score carries its own evidence basis (the <field>Basis convention of

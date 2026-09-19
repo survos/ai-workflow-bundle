@@ -6,6 +6,8 @@ namespace Survos\AiWorkflowBundle\Task;
 
 use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\AiThumbnailProviderInterface;
+use Symfony\AI\Agent\Agent;
+use Symfony\AI\Platform\StructuredOutput\ResponseFormatFactory;
 use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\TextSubjectInterface;
@@ -75,8 +77,25 @@ abstract class AbstractPromptTask implements TaskInterface
         }
 
         $result = $this->agent->call(new MessageBag(Message::forSystem($systemPrompt), $userMessage), $options);
-        $data = $this->normalizeContent($result->getContent());
-        $tokens = $this->tokenUsage($result->getMetadata()->get('token_usage'));
+
+        return $this->taskResultFromData(
+            $this->normalizeContent($result->getContent()),
+            $this->tokenUsage($result->getMetadata()->get('token_usage')),
+            $systemPrompt,
+            $userPrompt,
+            $this->getMeta()['agent'] ?? null,
+        );
+    }
+
+    /**
+     * The one path from a model's parsed answer to a TaskResult -- shared by run() and
+     * chatBatchResult(), so a subject gets identical claims whichever way it ran.
+     *
+     * @param array<string,mixed>      $data
+     * @param array<string,mixed>|null $tokens
+     */
+    private function taskResultFromData(array $data, ?array $tokens, string $systemPrompt, string $userPrompt, ?string $model): TaskResult
+    {
         if ($tokens !== null) {
             $data['_tokens'] = $tokens;
         }
@@ -86,12 +105,86 @@ abstract class AbstractPromptTask implements TaskInterface
             appendTasks: $this->followUpTasks($data),
             appendAnalysisTasks: $this->followUpAnalysisTasks($data),
             meta: new RunMeta(
-                model: $this->getMeta()['agent'] ?? null,
+                model: $model,
                 prompt: json_encode(['system' => $systemPrompt, 'user' => $userPrompt], JSON_THROW_ON_ERROR),
                 response: $data,
                 inputTokens: $tokens['prompt'] ?? null,
                 outputTokens: $tokens['completion'] ?? null,
             ),
+        );
+    }
+
+    /**
+     * BatchableTaskInterface::batchRequest() for a chat-completions prompt task: exactly what run()
+     * sends -- same prompts, same image, the agent's model, and the response schema Symfony AI
+     * builds from responseFormatClass() -- as an OpenAI-shaped /v1/chat/completions body.
+     *
+     * @return array{endpoint: string, body: array<string, mixed>}
+     */
+    protected function chatBatchRequest(WorkflowSubjectInterface $subject): array
+    {
+        $model = $this->agentModel();
+        $inputs = $this->inputs($subject);
+        [$systemPrompt, $userPrompt] = $this->buildPrompts($subject, $inputs);
+
+        $user = [['type' => 'text', 'text' => $userPrompt]];
+        $imageUrl = $inputs['image_url'] ?? null;
+        if (is_string($imageUrl) && $imageUrl !== '' && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf')) {
+            $user[] = ['type' => 'image_url', 'image_url' => ['url' => $imageUrl]];
+        }
+
+        $body = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $user],
+            ],
+        ];
+        if ($format = $this->responseFormatClass()) {
+            $body['response_format'] = (new ResponseFormatFactory())->create($format);
+        }
+
+        return ['endpoint' => '/v1/chat/completions', 'body' => $body];
+    }
+
+    /**
+     * The configured model behind $this->agent. Symfony AI's Agent exposes it; in dev the profiler
+     * wraps it in a TraceableAgent, which does not, so unwrap that (read-only, debug wrapper only).
+     */
+    private function agentModel(): string
+    {
+        $agent = $this->agent;
+        while ($agent instanceof \Symfony\AI\Agent\TraceableAgent) {
+            $agent = (new \ReflectionProperty($agent, 'agent'))->getValue($agent);
+        }
+        if (!$agent instanceof Agent) {
+            throw new \LogicException(sprintf('%s: batching needs the agent\'s model, and %s does not expose one.', static::class, get_debug_type($agent)));
+        }
+
+        return $agent->getModel();
+    }
+
+    /**
+     * BatchableTaskInterface::batchResult() for chatBatchRequest(): one chat-completions response
+     * body -> the same TaskResult run() would have produced.
+     *
+     * @param array<string, mixed> $responseBody
+     */
+    protected function chatBatchResult(WorkflowSubjectInterface $subject, array $responseBody): TaskResult
+    {
+        $choice = $responseBody['choices'][0] ?? null;
+        if (($choice['finish_reason'] ?? null) !== 'stop' || !is_string($choice['message']['content'] ?? null)) {
+            throw new \UnexpectedValueException(sprintf('%s: incomplete batch response (finish_reason %s).', static::class, $choice['finish_reason'] ?? 'none'));
+        }
+        [$systemPrompt, $userPrompt] = $this->buildPrompts($subject);
+        $usage = $responseBody['usage'] ?? [];
+
+        return $this->taskResultFromData(
+            $this->normalizeContent($choice['message']['content']),
+            ['prompt' => $usage['prompt_tokens'] ?? null, 'completion' => $usage['completion_tokens'] ?? null, 'total' => $usage['total_tokens'] ?? null],
+            $systemPrompt,
+            $userPrompt,
+            $responseBody['model'] ?? null,
         );
     }
 

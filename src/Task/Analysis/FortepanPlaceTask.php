@@ -20,7 +20,7 @@ use Symfony\Contracts\Service\Attribute\Required;
  * town, but also a point of interest, like a library, a bakery, a school." Text-only by design
  * (Tac, same conversation) -- a named place usually comes from something legible in the image
  * (a station sign, a shop name, a postmark) that observe's prose/transcription already
- * captured, not from re-examining the picture itself. See FortepanCurationScoreTask for the
+ * captured, not from re-examining the picture itself. See MeritScoreTask for the
  * criteria that do need the image.
  */
 #[AsTask('Text-only place inference (city/town/POI) from observation evidence.', self::class)]

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle\Result;
 
 /**
- * Structured output from the fortepan_curation_score task -- Fortepan IA's own curation
- * criteria (survos-sites/ssai, Tac 2026-08-07), scored per photo. Deliberately image-based
+ * Structured output from the merit_score task: a vernacular photograph's merit for a public
+ * archive, scored per criterion. The criteria are adapted from Fortepan Iowa's curation best
+ * practice (survos-sites/ssai, Tac 2026-08-07); the project is ours, the rubric is credited to them. Deliberately image-based
  * (unlike fortepan_place): quality/originality/composition/"is someone in the act of taking a
  * photo" all require actually looking at the picture, not just reading a prior description of
  * it -- this is the split Tac asked for over PLACE, which can come from text alone.
@@ -21,7 +22,7 @@ namespace Survos\AiWorkflowBundle\Result;
  * re-deriving it from the image a second time, and the two never disagree with each other
  * silently.
  */
-final class FortepanCurationScoreResult implements \JsonSerializable
+final class MeritScoreResult implements \JsonSerializable
 {
     public function __construct(
         /** Tells a story -- funny, tragic, a situation people recognize (a rally, a particular kind of motorbike, a moment mid-happening). */
