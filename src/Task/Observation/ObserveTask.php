@@ -6,6 +6,9 @@ namespace Survos\AiWorkflowBundle\Task\Observation;
 
 use Survos\ClaimsBundle\Service\RawClaim;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
+use Survos\AiWorkflowBundle\Task\TaskResult;
+use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
 use Survos\AiWorkflowBundle\Task\AnalysisTaskInterface;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
@@ -17,7 +20,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Service\Attribute\Required;
 
 #[AsTask('Low-resolution visual observation. Produces a routing decision, prose description, and structured transcription. Queues follow-up image and analysis tasks.', self::class, produces: ['ai:observationProse'])]
-final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface, ObservationTaskInterface
+final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface, ObservationTaskInterface, BatchableTaskInterface
 {
     public const string TASK = 'observe';
 
@@ -34,6 +37,35 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
     public function setTaskRegistry(TaskRegistry $taskRegistry): void
     {
         $this->taskRegistry = $taskRegistry;
+    }
+
+    /** Low detail: a 512px thumbnail's tiles add nothing to a scene inventory (measured on omeka/wej: fuller prose, half the tokens). */
+    protected function batchImageDetail(): ?string
+    {
+        return 'low';
+    }
+
+    public function batchProvider(): string
+    {
+        return 'openai';
+    }
+
+    /** OpenAI fetches the image itself, so it must be a public http(s) URL (the imgproxy AI thumbnail is). */
+    public function supportsBatch(WorkflowSubjectInterface $subject): bool
+    {
+        $url = $this->inputs($subject)['image_url'] ?? null;
+
+        return $this->supports($subject) && is_string($url) && preg_match('#^https?://#i', $url) === 1;
+    }
+
+    public function batchRequest(WorkflowSubjectInterface $subject): array
+    {
+        return $this->chatBatchRequest($subject);
+    }
+
+    public function batchResult(WorkflowSubjectInterface $subject, array $responseBody): TaskResult
+    {
+        return $this->chatBatchResult($subject, $responseBody);
     }
 
     protected function responseFormatClass(): ?string

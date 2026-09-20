@@ -55,6 +55,12 @@ final class MeritScoreTask extends AbstractPromptTask implements ImageTaskInterf
         ];
     }
 
+    /** Low detail: scores moved less than run-to-run variance at half the tokens (measured on omeka/wej), quality/blur included. */
+    protected function batchImageDetail(): ?string
+    {
+        return 'low';
+    }
+
     public function batchProvider(): string
     {
         return 'openai';

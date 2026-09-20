@@ -130,7 +130,11 @@ abstract class AbstractPromptTask implements TaskInterface
         $user = [['type' => 'text', 'text' => $userPrompt]];
         $imageUrl = $inputs['image_url'] ?? null;
         if (is_string($imageUrl) && $imageUrl !== '' && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf')) {
-            $user[] = ['type' => 'image_url', 'image_url' => ['url' => $imageUrl]];
+            $image = ['url' => $imageUrl];
+            if (($detail = $this->batchImageDetail()) !== null) {
+                $image['detail'] = $detail;
+            }
+            $user[] = ['type' => 'image_url', 'image_url' => $image];
         }
 
         $body = [
@@ -162,6 +166,21 @@ abstract class AbstractPromptTask implements TaskInterface
         }
 
         return $agent->getModel();
+    }
+
+    /**
+     * OpenAI image `detail` for the batch request: 'low' is a flat ~2,833 tokens on gpt-4o-mini
+     * instead of tiling (~8,500 for a 512px thumbnail), and measured on omeka/wej it halves the
+     * cost with no loss -- observe's inventory was if anything fuller, and merit's scores moved
+     * less than they do between two identical runs. Null (the default) leaves it to the provider:
+     * a task reading fine print or handwriting wants the tiles.
+     *
+     * Only the batch path can set this: the sync path goes through Symfony AI's ImageUrl, whose
+     * normalizer emits {url} alone, so a synchronous run of the same task pays full tiling.
+     */
+    protected function batchImageDetail(): ?string
+    {
+        return null;
     }
 
     /**
