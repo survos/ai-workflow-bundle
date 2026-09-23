@@ -17,6 +17,7 @@ use Symfony\AI\Platform\Message\Content\Image;
 use Symfony\AI\Platform\Message\Content\ImageUrl;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
+use Symfony\AI\Platform\Result\ResultInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Service\Attribute\Required;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -83,8 +84,49 @@ abstract class AbstractPromptTask implements TaskInterface
             $this->tokenUsage($result->getMetadata()->get('token_usage')),
             $systemPrompt,
             $userPrompt,
-            $this->getMeta()['agent'] ?? null,
+            $this->modelId($result),
         );
+    }
+
+    /**
+     * The model that actually answered, for RunMeta::$model.
+     *
+     * This used to pass `getMeta()['agent']` -- the AGENT name from the bundle config
+     * ("description", "item_synthesis"), not a model at all. Every ClaimRun therefore
+     * recorded a label you cannot price: working out what a 6M-token run had cost meant
+     * opening ai.yaml to see which model that agent was wired to, and the answer was
+     * only as current as the config you happened to read.
+     *
+     * The provider's own response body is the authoritative answer and is better than
+     * the config in one way that matters for billing: it names the exact deployed
+     * version ("gpt-4o-mini-2024-07-18"), which is what the invoice is actually priced
+     * against, not the floating alias the config asked for.
+     *
+     * Falls back to the agent name so a provider that omits `model` still records
+     * something identifiable rather than null.
+     */
+    private function modelId(ResultInterface $result): ?string
+    {
+        try {
+            $raw = $result->getRawResult()?->getData();
+        } catch (\Throwable) {
+            // A streamed or replayed result may have no raw body to read. Never let
+            // bookkeeping break the task whose output we already have.
+            $raw = null;
+        }
+
+        $model = \is_array($raw) ? ($raw['model'] ?? null) : null;
+
+        // symfony/ai 0.13 moved the model to a plain string (Input::getModel(): string);
+        // older versions handed back a Model object. Accept either, so upgrading the
+        // platform does not silently start writing "Object" into the column.
+        if (\is_object($model)) {
+            $model = method_exists($model, 'getName') ? $model->getName() : null;
+        }
+
+        return \is_string($model) && trim($model) !== ''
+            ? trim($model)
+            : ($this->getMeta()['agent'] ?? null);
     }
 
     /**
