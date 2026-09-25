@@ -16,13 +16,23 @@ use Survos\AiWorkflowBundle\Task\TaskRunner;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Survos\StateBundle\Config\AttributesWorkflowConfigBuilder;
-use Survos\StateBundle\Util\QueueNameUtil;
-use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Survos\Kit\AbstractSurvosBundle;
+use Survos\Kit\SurvosKitBundle;
+use Survos\Kit\Traits\HasDoctrineEntities;
+use Symfony\Component\DependencyInjection\Kernel\RequiredBundle;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
-final class SurvosAiWorkflowBundle extends AbstractBundle
+#[RequiredBundle(SurvosKitBundle::class)]
+// Symfony\Component\HttpKernel\Bundle\Bundle <-- Flex auto-registration marker (see Survos\Kit\AbstractSurvosBundle)
+final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
 {
+    use HasDoctrineEntities;
+
+    protected function doctrineAlias(): string
+    {
+        return 'AiWorkflow';
+    }
+
     public function configureRoutes(RoutingConfigurator $routes): void
     {
         $routes->import(__DIR__ . '/Controller/', 'attribute');
@@ -42,6 +52,8 @@ final class SurvosAiWorkflowBundle extends AbstractBundle
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        parent::loadExtension($config, $container, $builder);
+
         $container->parameters()
             ->set('survos_ai_workflow.disabled_tasks', $config['disabled_tasks'])
             ->set('survos_ai_workflow.task_map',  [])
@@ -73,7 +85,6 @@ final class SurvosAiWorkflowBundle extends AbstractBundle
             $services->set(AiWorkflowMenuSubscriber::class);
         }
 
-        $services->load('Survos\\AiWorkflowBundle\\Command\\', __DIR__ . '/Command/');
         $services->load('Survos\\AiWorkflowBundle\\Task\\Observation\\', __DIR__ . '/Task/Observation/');
         $services->load('Survos\\AiWorkflowBundle\\Task\\Analysis\\', __DIR__ . '/Task/Analysis/');
     }
@@ -86,31 +97,5 @@ final class SurvosAiWorkflowBundle extends AbstractBundle
             ->addTag('ai_workflow.task');
 
         $container->addCompilerPass(new TaskRegistryPass());
-    }
-
-    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
-    {
-        $builder->prependExtensionConfig('doctrine', [
-            'orm' => [
-                'mappings' => [
-                    'SurvosAiWorkflowBundle' => [
-                        'is_bundle' => false,
-                        'type'      => 'attribute',
-                        'dir'       => \dirname(__DIR__) . '/src/Entity',
-                        'prefix'    => 'Survos\\AiWorkflowBundle\\Entity',
-                        'alias'     => 'AiWorkflow',
-                    ],
-                ],
-            ],
-        ]);
-
-        // Workflow registration is handled by StatePrependExtension in state-bundle,
-        // which now auto-includes this bundle's /Workflow dir via class_exists detection.
-
-        $builder->prependExtensionConfig('twig', [
-            'paths' => [
-                \dirname(__DIR__) . '/templates' => 'SurvosAiWorkflow',
-            ],
-        ]);
     }
 }

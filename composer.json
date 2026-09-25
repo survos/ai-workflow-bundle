@@ -11,6 +11,7 @@
     },
     "require": {
         "php": "^8.5",
+        "survos/kit-bundle": "^2.33",
         "survos/state-bundle": "^2.5",
         "survos/claims-bundle": "^2.5",
         "symfony/dependency-injection": "^8.1",
@@ -20,10 +21,10 @@
         "symfony/service-contracts": "^3.6",
         "symfony/twig-bundle": "^8.1",
         "twig/twig": "^3.0|^4.0",
-        "symfony/ai-bundle": "^0.13",
-        "symfony/ai-agent": "^0.13",
-        "symfony/ai-open-ai-platform": "^0.13",
-        "symfony/ai-mistral-platform": "^0.13",
+        "symfony/ai-bundle": "^0.14",
+        "symfony/ai-agent": "^0.14",
+        "symfony/ai-open-ai-platform": "^0.14",
+        "symfony/ai-mistral-platform": "^0.14",
         "survos/data-contracts": "^2.5",
         "aws/aws-sdk-php": "^3.388"
     },
