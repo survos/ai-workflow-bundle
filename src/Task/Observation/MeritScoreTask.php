@@ -38,7 +38,7 @@ final class MeritScoreTask extends AbstractPromptTask implements ImageTaskInterf
 
     public function __construct(
         #[Autowire(service: 'ai.agent.description')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }

@@ -21,7 +21,7 @@ final class AnnotateHandwritingTask extends AbstractPromptTask implements ImageT
 
     public function __construct(
         #[Autowire(service: 'ai.agent.mistral_vision')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }

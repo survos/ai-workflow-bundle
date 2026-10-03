@@ -21,7 +21,7 @@ final class FlorenceTask extends AbstractAiToolsTask implements ImageTaskInterfa
 
     public function __construct(
         #[Autowire(service: 'ai.platform.openresponses.ai_tools')]
-        PlatformInterface $platform,
+        ?PlatformInterface $platform = null,
     ) {
         parent::__construct($platform);
     }

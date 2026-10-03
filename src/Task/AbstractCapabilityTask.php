@@ -34,7 +34,7 @@ abstract class AbstractCapabilityTask implements TaskInterface
     protected TaskClaimMapper $claimMapper;
 
     public function __construct(
-        protected readonly PlatformInterface $platform,
+        protected readonly ?PlatformInterface $platform = null,
     ) {
     }
 
@@ -132,6 +132,10 @@ abstract class AbstractCapabilityTask implements TaskInterface
 
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
+        if ($this->platform === null) {
+            throw new \LogicException(sprintf('Task "%s" requires its configured "%s" platform.', $this->getTask(), $this->platformName()));
+        }
+
         $inputs = $this->inputs($subject);
         $context = $subject instanceof ContextSubjectInterface ? $subject->getWorkflowContext() : [];
 

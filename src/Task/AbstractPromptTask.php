@@ -30,7 +30,7 @@ abstract class AbstractPromptTask implements TaskInterface
     protected TaskClaimMapper $claimMapper;
 
     public function __construct(
-        protected readonly AgentInterface $agent,
+        protected readonly ?AgentInterface $agent = null,
     ) {}
 
     #[Required]
@@ -60,6 +60,10 @@ abstract class AbstractPromptTask implements TaskInterface
 
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
+        if ($this->agent === null) {
+            throw new \LogicException(sprintf('Task "%s" requires the configured service "ai.agent.%s".', $this->getTask(), $this->agentName()));
+        }
+
         $inputs = $this->inputs($subject);
         [$systemPrompt, $userPrompt] = $this->buildPrompts($subject, $inputs);
 

@@ -28,7 +28,7 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
 
     public function __construct(
         #[Autowire(service: 'ai.agent.description')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }

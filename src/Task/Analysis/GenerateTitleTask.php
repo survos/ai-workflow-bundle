@@ -19,7 +19,7 @@ final class GenerateTitleTask extends AbstractAnalysisTask
 
     public function __construct(
         #[Autowire(service: 'ai.agent.metadata')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }

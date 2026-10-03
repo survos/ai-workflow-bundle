@@ -23,7 +23,7 @@ final class OcrTask extends AbstractAiToolsTask implements ImageTaskInterface, O
 
     public function __construct(
         #[Autowire(service: 'ai.platform.openresponses.ai_tools')]
-        PlatformInterface $platform,
+        ?PlatformInterface $platform = null,
     ) {
         parent::__construct($platform);
     }

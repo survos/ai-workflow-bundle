@@ -21,7 +21,7 @@ final class ContextDescriptionTask extends AbstractAnalysisTask
 
     public function __construct(
         #[Autowire(service: 'ai.agent.description')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }

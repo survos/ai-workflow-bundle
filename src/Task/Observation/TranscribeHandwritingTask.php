@@ -22,7 +22,7 @@ final class TranscribeHandwritingTask extends AbstractPromptTask implements Imag
 
     public function __construct(
         #[Autowire(service: 'ai.agent.mistral_vision')]
-        AgentInterface $agent,
+        ?AgentInterface $agent = null,
     ) {
         parent::__construct($agent);
     }
