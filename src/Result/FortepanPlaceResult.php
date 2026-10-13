@@ -8,7 +8,7 @@ namespace Survos\AiWorkflowBundle\Result;
  * Structured output from the fortepan_place analysis task -- text-only, reads the observe
  * pass's prose/transcription for place clues (a station name, a shop sign, a postmark) rather
  * than looking at the image itself. See PLACE in the Fortepan IA curation criteria: "a city or
- * town, but also a point of interest, like a library, a bakery, a school."
+ * town, but also a point of interest, like a library, a bakery, a school.".
  */
 final class FortepanPlaceResult implements \JsonSerializable
 {
@@ -30,6 +30,6 @@ final class FortepanPlaceResult implements \JsonSerializable
             'place' => $this->place,
             'confidence' => $this->confidence,
             'basis' => $this->basis,
-        ], static fn ($v) => $v !== null);
+        ], static fn ($v) => null !== $v);
     }
 }

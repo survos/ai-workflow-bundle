@@ -8,10 +8,10 @@ use Survos\AiWorkflowBundle\Result\MeritScoreResult;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
-use Survos\AiWorkflowBundle\Task\TaskResult;
-use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
+use Survos\AiWorkflowBundle\Task\TaskResult;
 use Survos\ClaimsBundle\Service\RawClaim;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -71,7 +71,7 @@ final class MeritScoreTask extends AbstractPromptTask implements ImageTaskInterf
     {
         $url = $this->inputs($subject)['image_url'] ?? null;
 
-        return $this->supports($subject) && is_string($url) && preg_match('#^https?://#i', $url) === 1;
+        return $this->supports($subject) && is_string($url) && 1 === preg_match('#^https?://#i', $url);
     }
 
     public function batchRequest(WorkflowSubjectInterface $subject): array
@@ -107,8 +107,8 @@ final class MeritScoreTask extends AbstractPromptTask implements ImageTaskInterf
                 // Each score carries its own evidence basis (the <field>Basis convention of
                 // MetadataResult); the overall score's basis is the rationale. A 0 is not an
                 // assertion and carries none.
-                $own = $key === 'overallScore' ? ($data['rationale'] ?? null) : ($data[substr($key, 0, -strlen('Score')) . 'Basis'] ?? null);
-                $basis = (int) $data[$key] > 0 && is_string($own) && trim($own) !== '' ? $own : null;
+                $own = 'overallScore' === $key ? ($data['rationale'] ?? null) : ($data[substr($key, 0, -strlen('Score')).'Basis'] ?? null);
+                $basis = (int) $data[$key] > 0 && is_string($own) && '' !== trim($own) ? $own : null;
                 $claims[] = new RawClaim($predicate, (int) $data[$key], basis: $basis);
             }
         }

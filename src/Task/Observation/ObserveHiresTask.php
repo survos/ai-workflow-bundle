@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\ClaimsBundle\Service\RawClaim;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
 use Survos\AiWorkflowBundle\Task\AnalysisTaskInterface;
 use Survos\AiWorkflowBundle\Task\AsTask;
@@ -12,6 +11,7 @@ use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
+use Survos\ClaimsBundle\Service\RawClaim;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -51,21 +51,21 @@ final class ObserveHiresTask extends AbstractPromptTask implements ImageTaskInte
 
         return $base + [
             'availableAnalysis' => $availableAnalysis,
-            'stage1Routing'     => $context['stage1_routing'] ?? null,
+            'stage1Routing' => $context['stage1_routing'] ?? null,
         ];
     }
 
     protected function claimsFromData(array $data): array
     {
-        $prose         = $data['prose']         ?? '';
+        $prose = $data['prose'] ?? '';
         $transcription = $data['transcription'] ?? null;
 
         $claims = [];
 
-        if ($prose !== '') {
+        if ('' !== $prose) {
             $claims[] = new RawClaim(TaskClaimMapper::PRED_OBSERVATION_PROSE, $prose, 100, null);
         }
-        if ($transcription !== null) {
+        if (null !== $transcription) {
             $claims[] = new RawClaim(TaskClaimMapper::PRED_TRANSCRIPTION, $transcription, 100, null);
         }
 

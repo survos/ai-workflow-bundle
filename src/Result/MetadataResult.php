@@ -60,28 +60,28 @@ final class MetadataResult implements \JsonSerializable
 
         /**
          * Subject headings with confidence (0–100) and evidence basis.
-         * Each item: {term: string, confidence: int 0-100, basis: string}
+         * Each item: {term: string, confidence: int 0-100, basis: string}.
          *
          * @var list<array{term: string, confidence?: int, basis?: string}>
          */
         public readonly array $subjects = [],
 
         /**
-         * Named people — each: {term: string, confidence?: int 0-100, basis?: string}
+         * Named people — each: {term: string, confidence?: int 0-100, basis?: string}.
          *
          * @var list<array{term: string, confidence?: int, basis?: string}>
          */
         public readonly array $people = [],
 
         /**
-         * Geographic subjects — each: {term: string, confidence?: int 0-100, basis?: string}
+         * Geographic subjects — each: {term: string, confidence?: int 0-100, basis?: string}.
          *
          * @var list<array{term: string, confidence?: int, basis?: string}>
          */
         public readonly array $places = [],
 
         /**
-         * Organisations — each: {term: string, confidence?: int 0-100, basis?: string}
+         * Organisations — each: {term: string, confidence?: int 0-100, basis?: string}.
          *
          * @var list<array{term: string, confidence?: int, basis?: string}>
          */
@@ -95,20 +95,20 @@ final class MetadataResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return array_filter([
-            'description'       => $this->description,
+            'description' => $this->description,
             'description_basis' => $this->descriptionBasis,
-            'dense_summary'     => $this->denseSummary,
+            'dense_summary' => $this->denseSummary,
             'dense_summary_basis' => $this->denseSummaryBasis,
-            'title'             => $this->title,
-            'title_basis'       => $this->titleBasis,
-            'date_hint'         => $this->dateHint,
-            'date_confidence'   => $this->dateConfidence,
-            'date_basis'        => $this->dateBasis,
-            'subjects'          => $this->subjects ?: null,
-            'people'            => $this->people ?: null,
-            'places'            => $this->places ?: null,
-            'organisations'     => $this->organisations ?: null,
-            'language'          => $this->language,
-        ], static fn($v) => $v !== null && $v !== []);
+            'title' => $this->title,
+            'title_basis' => $this->titleBasis,
+            'date_hint' => $this->dateHint,
+            'date_confidence' => $this->dateConfidence,
+            'date_basis' => $this->dateBasis,
+            'subjects' => $this->subjects ?: null,
+            'people' => $this->people ?: null,
+            'places' => $this->places ?: null,
+            'organisations' => $this->organisations ?: null,
+            'language' => $this->language,
+        ], static fn ($v) => null !== $v && [] !== $v);
     }
 }

@@ -66,7 +66,7 @@ final class FortepanPlaceTask extends AbstractAnalysisTask
             scope: $subject->getWorkflowScope(),
         );
 
-        if ($transcriptionClaim !== null) {
+        if (null !== $transcriptionClaim) {
             $context['transcription'] = $transcriptionClaim->value;
         }
 
@@ -83,7 +83,7 @@ final class FortepanPlaceTask extends AbstractAnalysisTask
     protected function claimsFromData(array $data): array
     {
         $place = $data['place'] ?? null;
-        if (!is_string($place) || trim($place) === '') {
+        if (!is_string($place) || '' === trim($place)) {
             return [];
         }
 

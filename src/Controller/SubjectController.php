@@ -22,20 +22,20 @@ final class SubjectController extends AbstractController
     #[Route('', name: 'survos_ai_workflow_subjects')]
     public function index(Request $request): Response
     {
-        $scope       = $request->query->get('scope');
+        $scope = $request->query->get('scope');
         $subjectType = $request->query->get('subjectType');
-        $marking     = $request->query->get('marking');
+        $marking = $request->query->get('marking');
 
         $qb = $this->subjectRepository->createQueryBuilder('s')
             ->orderBy('s.createdAt', 'DESC');
 
-        if ($scope !== null && $scope !== '') {
+        if (null !== $scope && '' !== $scope) {
             $qb->andWhere('s.scope = :scope')->setParameter('scope', $scope);
         }
-        if ($subjectType !== null && $subjectType !== '') {
+        if (null !== $subjectType && '' !== $subjectType) {
             $qb->andWhere('s.subjectType = :subjectType')->setParameter('subjectType', $subjectType);
         }
-        if ($marking !== null && $marking !== '') {
+        if (null !== $marking && '' !== $marking) {
             $qb->andWhere('s.marking = :marking')->setParameter('marking', $marking);
         }
 
@@ -43,7 +43,7 @@ final class SubjectController extends AbstractController
         $subjects = $qb->setMaxResults(100)->getQuery()->getResult();
 
         // Tasks run per subject (single query for all subjects)
-        $subjectIds = array_map(fn(Subject $s) => $s->getWorkflowSubjectId(), $subjects);
+        $subjectIds = array_map(fn (Subject $s) => $s->getWorkflowSubjectId(), $subjects);
         $subjectType = $subjectType ?? ($subjects[0]->subjectType ?? null);
         $tasksRun = $subjectIds
             ? $this->subjectRepository->tasksRunBySubjectId(
@@ -71,14 +71,14 @@ final class SubjectController extends AbstractController
         );
 
         return $this->render('@SurvosAiWorkflow/subject/index.html.twig', [
-            'subjects'        => $subjects,
-            'tasksRun'        => $tasksRun,
-            'scopes'          => array_filter($scopes),
-            'subjectTypes'    => $subjectTypes,
-            'markings'        => $markings,
-            'activeScope'     => $scope,
-            'activeType'      => $subjectType,
-            'activeMarking'   => $marking,
+            'subjects' => $subjects,
+            'tasksRun' => $tasksRun,
+            'scopes' => array_filter($scopes),
+            'subjectTypes' => $subjectTypes,
+            'markings' => $markings,
+            'activeScope' => $scope,
+            'activeType' => $subjectType,
+            'activeMarking' => $marking,
         ]);
     }
 

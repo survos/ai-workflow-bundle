@@ -10,8 +10,15 @@ use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 
 final class AiWorkflowMenuSubscriber extends AbstractAdminMenuSubscriber
 {
-    protected function getLabel(): string { return 'AI Workflow'; }
-    protected function getResourceClasses(): array { return []; }
+    protected function getLabel(): string
+    {
+        return 'AI Workflow';
+    }
+
+    protected function getResourceClasses(): array
+    {
+        return [];
+    }
 
     #[AsEventListener(event: MenuEvent::ADMIN_NAVBAR_MENU)]
     public function onAdminNavbarMenu(MenuEvent $event): void

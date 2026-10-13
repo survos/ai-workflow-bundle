@@ -11,8 +11,8 @@ use Survos\DataContracts\Dto\Claim\TermClaim;
 final class TaskClaimMapper
 {
     public const PRED_OBSERVATION_PROSE = 'ai:observationProse';
-    public const PRED_TRANSCRIPTION     = 'ai:transcription';
-    public const PRED_NEXT_ACTION       = 'ai:nextAction';
+    public const PRED_TRANSCRIPTION = 'ai:transcription';
+    public const PRED_NEXT_ACTION = 'ai:nextAction';
 
     public const PRED_TITLE = 'dcterms:title';
     public const PRED_DESCRIPTION = 'dcterms:description';
@@ -25,6 +25,7 @@ final class TaskClaimMapper
 
     /**
      * @param array<string, mixed> $data
+     *
      * @return list<RawClaim>
      */
     public function map(array $data, ?string $textPredicate = null): array
@@ -32,10 +33,10 @@ final class TaskClaimMapper
         $claims = [];
         $textPredicate ??= Claim::PRED_OCR_TEXT;
 
-        $this->appendScalar($claims, self::PRED_TITLE,       $data['title']        ?? null, $this->confidence($data['title_confidence'] ?? $data['confidence'] ?? null), $data['title_basis']        ?? null);
-        $this->appendScalar($claims, self::PRED_DESCRIPTION, $data['description']  ?? null, null,                                                                          $data['description_basis']  ?? null);
-        $this->appendScalar($claims, self::PRED_ABSTRACT,    $data['summary']      ?? null);
-        $this->appendScalar($claims, Claim::PRED_DENSE_SUMMARY, $data['dense_summary'] ?? null, null,                                                                     $data['dense_summary_basis'] ?? null);
+        $this->appendScalar($claims, self::PRED_TITLE, $data['title'] ?? null, $this->confidence($data['title_confidence'] ?? $data['confidence'] ?? null), $data['title_basis'] ?? null);
+        $this->appendScalar($claims, self::PRED_DESCRIPTION, $data['description'] ?? null, null, $data['description_basis'] ?? null);
+        $this->appendScalar($claims, self::PRED_ABSTRACT, $data['summary'] ?? null);
+        $this->appendScalar($claims, Claim::PRED_DENSE_SUMMARY, $data['dense_summary'] ?? null, null, $data['dense_summary_basis'] ?? null);
         $this->appendScalar($claims, $textPredicate, $data['text'] ?? null, $this->confidence($data['confidence'] ?? null));
         $this->appendScalar($claims, $textPredicate, $data['annotated_text'] ?? null);
         $this->appendScalar($claims, self::PRED_LANGUAGE, $data['language'] ?? null);
@@ -73,7 +74,7 @@ final class TaskClaimMapper
      */
     private function appendScalar(array &$claims, string $predicate, mixed $value, ?int $confidence = null, ?string $basis = null): void
     {
-        if ($value === null || $value === '' || $value === []) {
+        if (null === $value || '' === $value || [] === $value) {
             return;
         }
 
@@ -81,14 +82,14 @@ final class TaskClaimMapper
     }
 
     /**
-     * @param list<RawClaim> $claims
+     * @param list<RawClaim>  $claims
      * @param iterable<mixed> $values
      */
     private function appendList(array &$claims, string $predicate, iterable $values, ?int $confidence = null): void
     {
         foreach ($values as $value) {
             $term = TermClaim::from($value);
-            if ($term->term === '') {
+            if ('' === $term->term) {
                 continue;
             }
             $this->appendScalar(
@@ -102,7 +103,7 @@ final class TaskClaimMapper
     }
 
     /**
-     * @param list<RawClaim> $claims
+     * @param list<RawClaim>  $claims
      * @param iterable<mixed> $values
      */
     private function appendStructuredList(array &$claims, string $predicate, iterable $values): void
@@ -117,13 +118,13 @@ final class TaskClaimMapper
     private function confidence(mixed $value): ?int
     {
         return match (true) {
-            $value === 'high'                               => 90,
-            $value === 'medium'                             => 70,
-            $value === 'low'                                => 50,
+            'high' === $value => 90,
+            'medium' === $value => 70,
+            'low' === $value => 50,
             is_int($value) && $value >= 0 && $value <= 100 => $value,
             // Legacy float 0.0–1.0 → scale up
-            is_numeric($value) && (float)$value <= 1.0     => (int) round((float)$value * 100),
-            default                                         => null,
+            is_numeric($value) && (float) $value <= 1.0 => (int) round((float) $value * 100),
+            default => null,
         };
     }
 }

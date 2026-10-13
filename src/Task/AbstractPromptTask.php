@@ -6,21 +6,21 @@ namespace Survos\AiWorkflowBundle\Task;
 
 use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\AiThumbnailProviderInterface;
-use Symfony\AI\Agent\Agent;
-use Symfony\AI\Platform\StructuredOutput\ResponseFormatFactory;
 use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\TextSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
+use Symfony\AI\Agent\Agent;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\AI\Platform\Message\Content\Image;
 use Symfony\AI\Platform\Message\Content\ImageUrl;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
 use Symfony\AI\Platform\Result\ResultInterface;
+use Symfony\AI\Platform\StructuredOutput\ResponseFormatFactory;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Contracts\Service\Attribute\Required;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 use Twig\Environment as TwigEnvironment;
 
 abstract class AbstractPromptTask implements TaskInterface
@@ -31,7 +31,8 @@ abstract class AbstractPromptTask implements TaskInterface
 
     public function __construct(
         protected readonly ?AgentInterface $agent = null,
-    ) {}
+    ) {
+    }
 
     #[Required]
     public function setTaskServices(
@@ -46,13 +47,13 @@ abstract class AbstractPromptTask implements TaskInterface
 
     public function supports(WorkflowSubjectInterface $subject): bool
     {
-        return $this->inputs($subject) !== [];
+        return [] !== $this->inputs($subject);
     }
 
     public function getTask(): string
     {
-        if (\defined(static::class . '::TASK')) {
-            return (string) constant(static::class . '::TASK');
+        if (\defined(static::class.'::TASK')) {
+            return (string) constant(static::class.'::TASK');
         }
 
         return AsTask::deriveName((new \ReflectionClass(static::class))->getShortName());
@@ -60,7 +61,7 @@ abstract class AbstractPromptTask implements TaskInterface
 
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
-        if ($this->agent === null) {
+        if (null === $this->agent) {
             throw new \LogicException(sprintf('Task "%s" requires the configured service "ai.agent.%s".', $this->getTask(), $this->agentName()));
         }
 
@@ -69,7 +70,7 @@ abstract class AbstractPromptTask implements TaskInterface
 
         $imageUrl = $inputs['image_url'] ?? null;
         $attachImage = is_string($imageUrl)
-            && $imageUrl !== ''
+            && '' !== $imageUrl
             && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf');
 
         $userMessage = $attachImage
@@ -128,7 +129,7 @@ abstract class AbstractPromptTask implements TaskInterface
             $model = method_exists($model, 'getName') ? $model->getName() : null;
         }
 
-        return \is_string($model) && trim($model) !== ''
+        return \is_string($model) && '' !== trim($model)
             ? trim($model)
             : ($this->getMeta()['agent'] ?? null);
     }
@@ -142,7 +143,7 @@ abstract class AbstractPromptTask implements TaskInterface
      */
     private function taskResultFromData(array $data, ?array $tokens, string $systemPrompt, string $userPrompt, ?string $model): TaskResult
     {
-        if ($tokens !== null) {
+        if (null !== $tokens) {
             $data['_tokens'] = $tokens;
         }
 
@@ -175,7 +176,7 @@ abstract class AbstractPromptTask implements TaskInterface
 
         $user = [['type' => 'text', 'text' => $userPrompt]];
         $imageUrl = $inputs['image_url'] ?? null;
-        if (is_string($imageUrl) && $imageUrl !== '' && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf')) {
+        if (is_string($imageUrl) && '' !== $imageUrl && !str_ends_with(strtolower(parse_url($imageUrl, PHP_URL_PATH) ?: $imageUrl), '.pdf')) {
             $image = ['url' => $imageUrl];
             if (($detail = $this->batchImageDetail()) !== null) {
                 $image['detail'] = $detail;
@@ -270,7 +271,7 @@ abstract class AbstractPromptTask implements TaskInterface
         $system = trim($this->twig->render($this->systemPromptTemplate(), $tplContext));
 
         $userTpl = $this->userPromptTemplate();
-        $user = $userTpl !== null
+        $user = null !== $userTpl
             ? trim($this->twig->render($userTpl, $tplContext))
             : trim($this->userPrompt($tplContext));
 
@@ -314,10 +315,7 @@ abstract class AbstractPromptTask implements TaskInterface
      */
     protected function userPrompt(array $context): string
     {
-        throw new \LogicException(sprintf(
-            '%s must either define a user template or override userPrompt().',
-            static::class,
-        ));
+        throw new \LogicException(sprintf('%s must either define a user template or override userPrompt().', static::class));
     }
 
     // ── Overridable hooks ────────────────────────────────────────────────────
@@ -332,6 +330,7 @@ abstract class AbstractPromptTask implements TaskInterface
 
     /**
      * @param array<string, mixed> $data
+     *
      * @return list<string>
      */
     protected function followUpTasks(array $data): array
@@ -341,6 +340,7 @@ abstract class AbstractPromptTask implements TaskInterface
 
     /**
      * @param array<string, mixed> $data
+     *
      * @return list<string>
      */
     protected function followUpAnalysisTasks(array $data): array
@@ -357,8 +357,8 @@ abstract class AbstractPromptTask implements TaskInterface
     }
 
     /**
-     * @param array<string, mixed> $inputs
      * @param array<string, mixed> $context
+     *
      * @return array<string, mixed>
      */
     /**
@@ -369,43 +369,44 @@ abstract class AbstractPromptTask implements TaskInterface
      * what is visible.
      *
      * @param array<string,mixed> $context
+     *
      * @return array<string,string>
      */
     protected function knownFacts(array $context): array
     {
         $join = static fn (mixed $v): ?string => is_array($v)
-            ? (implode('; ', array_filter(array_map('strval', $v), static fn (string $s): bool => trim($s) !== '')) ?: null)
-            : (is_scalar($v) && trim((string) $v) !== '' ? (string) $v : null);
+            ? (implode('; ', array_filter(array_map('strval', $v), static fn (string $s): bool => '' !== trim($s))) ?: null)
+            : (is_scalar($v) && '' !== trim((string) $v) ? (string) $v : null);
 
         return array_filter([
-            'title'       => $join($context['title'] ?? null),
-            'caption'     => $join($context['caption'] ?? null),
+            'title' => $join($context['title'] ?? null),
+            'caption' => $join($context['caption'] ?? null),
             'description' => $join($context['description'] ?? null),
-            'date'        => $join($context['date'] ?? null),
-            'creator'     => $join($context['creator'] ?? null),
-            'collection'  => $join($context['collection'] ?? null),
+            'date' => $join($context['date'] ?? null),
+            'creator' => $join($context['creator'] ?? null),
+            'collection' => $join($context['collection'] ?? null),
             // Sourced place of capture -- grounds sign/word transcription toward the location's
             // language (e.g. Hungarian, not Cyrillic, for a Hungarian sign).
-            'location'    => $join($context['place'] ?? null)
+            'location' => $join($context['place'] ?? null)
                 ?? (trim(implode(', ', array_filter([$context['city'] ?? null, $context['country'] ?? null]))) ?: null),
-        ], static fn (?string $v): bool => $v !== null);
+        ], static fn (?string $v): bool => null !== $v);
     }
 
     protected function promptContext(array $inputs, array $context = []): array
     {
         return [
-            'imageUrl'    => $inputs['image_url'] ?? null,
-            'text'        => $inputs['text'] ?? null,
-            'html'        => $inputs['html'] ?? null,
-            'mime'        => $inputs['mime'] ?? null,
-            'inputs'      => $inputs,
-            'context'     => $context,
-            'prior'       => [],
-            'ocr_text'    => $context['ocr_text'] ?? $context['ocrText'] ?? $inputs['text'] ?? null,
-            'type'        => $context['type'] ?? $context['content_type'] ?? null,
-            'metadata'    => $context['metadata'] ?? $context,
+            'imageUrl' => $inputs['image_url'] ?? null,
+            'text' => $inputs['text'] ?? null,
+            'html' => $inputs['html'] ?? null,
+            'mime' => $inputs['mime'] ?? null,
+            'inputs' => $inputs,
+            'context' => $context,
+            'prior' => [],
+            'ocr_text' => $context['ocr_text'] ?? $context['ocrText'] ?? $inputs['text'] ?? null,
+            'type' => $context['type'] ?? $context['content_type'] ?? null,
+            'metadata' => $context['metadata'] ?? $context,
             'description' => $context['description'] ?? null,
-            'title'       => $context['title'] ?? null,
+            'title' => $context['title'] ?? null,
         ];
     }
 
@@ -431,7 +432,7 @@ abstract class AbstractPromptTask implements TaskInterface
             }
         }
 
-        return array_filter($inputs, static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []);
+        return array_filter($inputs, static fn (mixed $value): bool => null !== $value && '' !== $value && [] !== $value);
     }
 
     /**
@@ -447,7 +448,7 @@ abstract class AbstractPromptTask implements TaskInterface
         if (str_starts_with($url, 'file://')) {
             $path = substr($url, 7);
             $binary = file_get_contents($path);
-            if ($binary === false) {
+            if (false === $binary) {
                 throw new \RuntimeException("Cannot read local image: {$path}");
             }
 
@@ -491,17 +492,17 @@ abstract class AbstractPromptTask implements TaskInterface
      */
     private function tokenUsage(mixed $usage): ?array
     {
-        if ($usage === null) {
+        if (null === $usage) {
             return null;
         }
 
         return [
-            'prompt'           => $usage->getPromptTokens(),
-            'completion'       => $usage->getCompletionTokens(),
-            'total'            => $usage->getTotalTokens(),
-            'cached'           => $usage->getCachedTokens(),
-            'cache_creation'   => $usage->getCacheCreationTokens(),
-            'cache_read'       => $usage->getCacheReadTokens(),
+            'prompt' => $usage->getPromptTokens(),
+            'completion' => $usage->getCompletionTokens(),
+            'total' => $usage->getTotalTokens(),
+            'cached' => $usage->getCachedTokens(),
+            'cache_creation' => $usage->getCacheCreationTokens(),
+            'cache_read' => $usage->getCacheReadTokens(),
         ];
     }
 

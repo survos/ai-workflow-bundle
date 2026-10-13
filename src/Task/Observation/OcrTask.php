@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /**
  * Tesseract OCR via the free, self-hosted ai-tools service — for clean typewritten
  * print and text-only documents. (Replaces the previous misnamed task that secretly
- * routed to OpenAI gpt-4o; this one is genuinely Tesseract and needs no API key.)
+ * routed to OpenAI gpt-4o; this one is genuinely Tesseract and needs no API key.).
  */
 #[AsTask('Tesseract OCR (free, self-hosted via ai-tools) — for clean typewritten print and text-only documents.', self::class, produces: ['ai:ocrText'], samples: ['https://s3.amazonaws.com/pastperfectonline/images/museum_986/006/20100110001.jpg'])]
 final class OcrTask extends AbstractAiToolsTask implements ImageTaskInterface, ObservationTaskInterface

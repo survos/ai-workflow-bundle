@@ -99,6 +99,6 @@ final class MeritScoreResult implements \JsonSerializable
             'inTheActBasis' => $this->inTheActBasis,
             'qualityBasis' => $this->qualityBasis,
             'originalityBasis' => $this->originalityBasis,
-        ], static fn ($v) => $v !== null);
+        ], static fn ($v) => null !== $v);
     }
 }

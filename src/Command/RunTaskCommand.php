@@ -5,29 +5,30 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Survos\AiWorkflowBundle\Task\TaskRegistry;
+use Survos\AiWorkflowBundle\Task\TaskRunner;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
+use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Survos\ClaimsBundle\Service\ClaimIngestor;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
-use Survos\AiWorkflowBundle\Task\TaskRegistry;
-use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
-use Survos\AiWorkflowBundle\Task\TaskRunner;
-use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Workflow\Registry;
+
 use function Symfony\Component\String\u;
 
 #[AsCommand('ai:task:run', 'Run an AI task or workflow transition against a specific entity.')]
 final class RunTaskCommand
 {
     public function __construct(
-        private readonly TaskRegistry           $taskRegistry,
-        private readonly TaskRunner             $taskRunner,
+        private readonly TaskRegistry $taskRegistry,
+        private readonly TaskRunner $taskRunner,
         private readonly EntityManagerInterface $entityManager,
-        private readonly ClaimIngestor          $claimIngestor,
-        private readonly Registry               $workflowRegistry,
+        private readonly ClaimIngestor $claimIngestor,
+        private readonly Registry $workflowRegistry,
     ) {
     }
 
@@ -54,60 +55,66 @@ final class RunTaskCommand
     ): int {
         $persist ??= true;
         $operatorHints = [];
-        if ($operator !== null) {
+        if (null !== $operator) {
             $operatorHints = json_decode($operator, true, 512, JSON_THROW_ON_ERROR);
         }
-        if ($hint !== null) {
+        if (null !== $hint) {
             $operatorHints['hint'] = $hint;
         }
 
         // ── Resolve entity class + load ──────────────────────────────────────
         $class = $this->resolveClass($entity);
-        if ($class === null) {
+        if (null === $class) {
             $io->error(sprintf('Could not resolve entity class for "%s".', $entity));
+
             return Command::FAILURE;
         }
 
         $entityObj = $this->entityManager->getRepository($class)->find($id);
-        if ($entityObj === null) {
+        if (null === $entityObj) {
             $io->error(sprintf('%s #%s not found.', $class, $id));
+
             return Command::FAILURE;
         }
 
         if (!$entityObj instanceof WorkflowSubjectInterface) {
             $io->error(sprintf('%s does not implement WorkflowSubjectInterface.', $class));
+
             return Command::FAILURE;
         }
 
         // ── Transition mode: fire one or all transitions ─────────────────────
-        if ($task === null) {
-            $transitions = $transition !== null ? [$transition] : self::TRANSITIONS;
+        if (null === $task) {
+            $transitions = null !== $transition ? [$transition] : self::TRANSITIONS;
+
             return $this->runTransitions($io, $entityObj, $transitions, $persist);
         }
 
         // ── Single-task override mode ─────────────────────────────────────────
         $taskObj = $this->taskRegistry->get($task);
-        if ($taskObj === null) {
+        if (null === $taskObj) {
             $io->error(sprintf(
                 'Unknown task "%s". Registered: %s',
                 $task,
                 implode(', ', array_keys($this->taskRegistry->getTaskMap())) ?: '(none)',
             ));
+
             return Command::FAILURE;
         }
 
         if (!$taskObj->supports($entityObj)) {
             $io->warning(sprintf('Task "%s" does not support %s — supports() returned false.', $task, $class));
+
             return Command::FAILURE;
         }
 
         // ── Inject operator hints via context (if subject supports it) ────────
-        if ($operatorHints !== [] && method_exists($entityObj, 'mergeWorkflowContext')) {
+        if ([] !== $operatorHints && method_exists($entityObj, 'mergeWorkflowContext')) {
             $entityObj->mergeWorkflowContext($operatorHints);
         }
 
         // ── Override image URL (e.g. imgproxy thumbnail) ─────────────────────
-        if ($thumbnailUrl !== null && property_exists($entityObj, 'resolvedImageUrl')) {
+        if (null !== $thumbnailUrl && property_exists($entityObj, 'resolvedImageUrl')) {
             $entityObj->resolvedImageUrl = $thumbnailUrl;
         }
 
@@ -116,10 +123,10 @@ final class RunTaskCommand
 
         $imageUrl = $entityObj instanceof \Survos\DataContracts\Workflow\ImageSubjectInterface
             ? $entityObj->getWorkflowImageUrl() : null;
-        if ($imageUrl !== null) {
+        if (null !== $imageUrl) {
             $io->writeln(sprintf('  <comment>image:</comment>    %s', $imageUrl));
         }
-        if ($operatorHints !== []) {
+        if ([] !== $operatorHints) {
             $io->writeln(sprintf('  <comment>operator:</comment> %s',
                 json_encode($operatorHints, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)));
         }
@@ -153,7 +160,7 @@ final class RunTaskCommand
             $value = is_array($claim->value)
                 ? json_encode($claim->value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
                 : (string) $claim->value;
-            $conf  = sprintf('%d%%', $claim->confidence);
+            $conf = sprintf('%d%%', $claim->confidence);
             $basis = $claim->basis ? sprintf(' [%s]', mb_substr($claim->basis, 0, 80)) : '';
 
             // Short values on one line; long values wrapped on next line
@@ -162,7 +169,7 @@ final class RunTaskCommand
                     $claim->predicate, $value, $conf, $basis));
             } else {
                 $io->writeln(sprintf('  <info>%-32s</info> <comment>%s</comment>%s', $claim->predicate, $conf, $basis));
-                $io->writeln('    ' . wordwrap($value, 110, "\n    "));
+                $io->writeln('    '.wordwrap($value, 110, "\n    "));
             }
         }
 
@@ -177,12 +184,12 @@ final class RunTaskCommand
                 scope: $entityObj->getWorkflowScope(),
                 subjectType: $class,
                 subjectId: $entityObj->getWorkflowSubjectId(),
-                source: $task . '@1.0',
+                source: $task.'@1.0',
                 rawClaims: $result->claims,
                 meta: $result->meta,
             );
 
-            if ($result->appendTasks !== [] && $entityObj instanceof PendingStepsInterface) {
+            if ([] !== $result->appendTasks && $entityObj instanceof PendingStepsInterface) {
                 foreach ($result->appendTasks as $step) {
                     $entityObj->addPendingStep($step, SubjectFlow::TRANSITION_OBSERVE);
                 }
@@ -202,9 +209,9 @@ final class RunTaskCommand
      */
     private function runTransitions(SymfonyStyle $io, WorkflowSubjectInterface $subject, array $transitions, bool $persist): int
     {
-        $workflow  = $this->workflowRegistry->get($subject, SubjectFlow::WORKFLOW_NAME);
+        $workflow = $this->workflowRegistry->get($subject, SubjectFlow::WORKFLOW_NAME);
         $shortName = (new \ReflectionClass($subject))->getShortName();
-        $applied   = 0;
+        $applied = 0;
 
         foreach ($transitions as $t) {
             if (!$workflow->can($subject, $t)) {
@@ -215,7 +222,7 @@ final class RunTaskCommand
             $io->writeln(sprintf('  <info>apply</info> %s (from <comment>%s</comment>)', $t, $subject->getMarking()));
             $workflow->apply($subject, $t, ['cascade' => 'none']);
             $io->writeln(sprintf('         → <info>%s</info>', $subject->getMarking()));
-            $applied++;
+            ++$applied;
 
             if ($persist) {
                 $this->entityManager->persist($subject);
@@ -223,8 +230,9 @@ final class RunTaskCommand
             }
         }
 
-        if ($applied === 0) {
+        if (0 === $applied) {
             $io->warning(sprintf('No transitions could be applied to %s #%s (marking: %s).', $shortName, $subject->getWorkflowSubjectId(), $subject->getMarking()));
+
             return Command::FAILURE;
         }
 
@@ -233,6 +241,7 @@ final class RunTaskCommand
             : sprintf('Dry run — %d transition(s) would apply.', $applied);
 
         $io->success($msg);
+
         return Command::SUCCESS;
     }
 

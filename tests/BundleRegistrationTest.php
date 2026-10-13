@@ -12,10 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-use function basename;
-use function dirname;
-use function glob;
-
 final class BundleRegistrationTest extends TestCase
 {
     public function testCommandsAndTaskRegistryRemainRegistered(): void
@@ -24,8 +20,8 @@ final class BundleRegistrationTest extends TestCase
         (new SurvosAiWorkflowBundle())->loadExtension(['disabled_tasks' => []], $this->configurator($builder), $builder);
 
         self::assertTrue($builder->hasDefinition(TaskRegistry::class));
-        foreach (glob(dirname(__DIR__).'/src/Command/*.php') as $file) {
-            self::assertTrue($builder->hasDefinition('Survos\\AiWorkflowBundle\\Command\\'.basename($file, '.php')));
+        foreach (\glob(\dirname(__DIR__).'/src/Command/*.php') as $file) {
+            self::assertTrue($builder->hasDefinition('Survos\\AiWorkflowBundle\\Command\\'.\basename($file, '.php')));
         }
     }
 
@@ -37,7 +33,7 @@ final class BundleRegistrationTest extends TestCase
         $mapping = $builder->getExtensionConfig('doctrine')[0]['orm']['mappings']['SurvosAiWorkflowBundle'];
         self::assertSame('AiWorkflow', $mapping['alias']);
         self::assertSame('Survos\\AiWorkflowBundle\\Entity', $mapping['prefix']);
-        self::assertSame('SurvosAiWorkflow', $builder->getExtensionConfig('twig')[0]['paths'][dirname(__DIR__).'/templates']);
+        self::assertSame('SurvosAiWorkflow', $builder->getExtensionConfig('twig')[0]['paths'][\dirname(__DIR__).'/templates']);
     }
 
     private function configurator(ContainerBuilder $builder): ContainerConfigurator

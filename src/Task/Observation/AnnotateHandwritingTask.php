@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\ClaimsBundle\Entity\Claim;
-use Survos\DataContracts\Workflow\ImageSubjectInterface;
-use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
+use Survos\ClaimsBundle\Entity\Claim;
+use Survos\DataContracts\Workflow\ImageSubjectInterface;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -28,7 +28,7 @@ final class AnnotateHandwritingTask extends AbstractPromptTask implements ImageT
 
     public function supports(WorkflowSubjectInterface $subject): bool
     {
-        return $subject instanceof ImageSubjectInterface && $subject->getWorkflowImageUrl() !== null;
+        return $subject instanceof ImageSubjectInterface && null !== $subject->getWorkflowImageUrl();
     }
 
     protected function claimsFromData(array $data): array

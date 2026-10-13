@@ -28,8 +28,8 @@ final class DescriptionResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'description'        => $this->description,
-            'language'           => $this->language,
+            'description' => $this->description,
+            'language' => $this->language,
             'physicalAttributes' => $this->physicalAttributes,
         ];
     }

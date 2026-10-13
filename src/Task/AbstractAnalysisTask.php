@@ -25,7 +25,7 @@ abstract class AbstractAnalysisTask extends AbstractPromptTask implements Analys
 
     protected function userPromptTemplate(): ?string
     {
-        $path = \dirname(__DIR__, 2) . "/templates/prompt/analysis/user/{$this->getTask()}.html.twig";
+        $path = \dirname(__DIR__, 2)."/templates/prompt/analysis/user/{$this->getTask()}.html.twig";
 
         return is_file($path)
             ? "@SurvosAiWorkflow/prompt/analysis/user/{$this->getTask()}.html.twig"
@@ -55,7 +55,7 @@ abstract class AbstractAnalysisTask extends AbstractPromptTask implements Analys
             scope: $subject->getWorkflowScope(),
         );
 
-        if ($proseClaim !== null) {
+        if (null !== $proseClaim) {
             $context['observation_prose'] = (string) $proseClaim->value;
         }
 

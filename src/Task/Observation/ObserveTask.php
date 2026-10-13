@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Observation;
 
-use Survos\ClaimsBundle\Service\RawClaim;
 use Survos\AiWorkflowBundle\Task\AbstractPromptTask;
-use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
-use Survos\AiWorkflowBundle\Task\TaskResult;
-use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
 use Survos\AiWorkflowBundle\Task\AnalysisTaskInterface;
 use Survos\AiWorkflowBundle\Task\AsTask;
+use Survos\AiWorkflowBundle\Task\BatchableTaskInterface;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
+use Survos\AiWorkflowBundle\Task\TaskResult;
+use Survos\ClaimsBundle\Service\RawClaim;
+use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -55,7 +55,7 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
     {
         $url = $this->inputs($subject)['image_url'] ?? null;
 
-        return $this->supports($subject) && is_string($url) && preg_match('#^https?://#i', $url) === 1;
+        return $this->supports($subject) && is_string($url) && 1 === preg_match('#^https?://#i', $url);
     }
 
     public function batchRequest(WorkflowSubjectInterface $subject): array
@@ -79,8 +79,8 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
 
         $operatorHint = array_filter([
             'content_type' => $context['content_type'] ?? $context['type'] ?? null,
-            'voice_note'   => $context['voice_note']   ?? null,
-            'collection'   => $context['collection']   ?? null,
+            'voice_note' => $context['voice_note'] ?? null,
+            'collection' => $context['collection'] ?? null,
         ]);
 
         $existingMetadata = $this->knownFacts($context);
@@ -94,35 +94,35 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
         );
 
         return $base + [
-            'operatorHint'      => $operatorHint      ?: null,
-            'existingMetadata'  => $existingMetadata  ?: null,
-            'availableSteps'    => $availableSteps,
+            'operatorHint' => $operatorHint ?: null,
+            'existingMetadata' => $existingMetadata ?: null,
+            'availableSteps' => $availableSteps,
             'availableAnalysis' => $availableAnalysis,
         ];
     }
 
     protected function claimsFromData(array $data): array
     {
-        $routing       = $data['routing']       ?? [];
-        $prose         = $data['prose']         ?? '';
+        $routing = $data['routing'] ?? [];
+        $prose = $data['prose'] ?? '';
         $transcription = $data['transcription'] ?? null;
 
         $flat = array_merge(
             [
-                'content_type'            => $routing['content_type']            ?? null,
+                'content_type' => $routing['content_type'] ?? null,
                 'content_type_confidence' => $routing['content_type_confidence'] ?? null,
-                'content_type_basis'      => $routing['content_type_basis']      ?? null,
-                'risk_if_skipped'         => $routing['risk_if_skipped']         ?? null,
+                'content_type_basis' => $routing['content_type_basis'] ?? null,
+                'risk_if_skipped' => $routing['risk_if_skipped'] ?? null,
             ],
             $routing['text_flags'] ?? [],
         );
 
         $claims = $this->claimMapper->map($flat);
 
-        if ($prose !== '') {
+        if ('' !== $prose) {
             $claims[] = new RawClaim(TaskClaimMapper::PRED_OBSERVATION_PROSE, $prose, 100, null);
         }
-        if ($transcription !== null) {
+        if (null !== $transcription) {
             $claims[] = new RawClaim(TaskClaimMapper::PRED_TRANSCRIPTION, $transcription, 100, null);
         }
 

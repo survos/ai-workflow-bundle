@@ -6,14 +6,14 @@ namespace Survos\AiWorkflowBundle\Task;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
+use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Survos\ClaimsBundle\Service\ClaimIngestor;
 use Survos\ClaimsBundle\Service\RawClaim;
 use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\StateBundle\Traits\MarkingInterface;
-use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
-use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 
 final class TaskRunner
 {
@@ -30,7 +30,7 @@ final class TaskRunner
             return null;
         }
 
-        if ($subject->pendingCount($phase) === 0) {
+        if (0 === $subject->pendingCount($phase)) {
             return null;
         }
 
@@ -38,7 +38,7 @@ final class TaskRunner
         $subjectId = $subject->getWorkflowSubjectId();
 
         $task = $this->registry->get($taskName);
-        if ($task === null) {
+        if (null === $task) {
             $this->logger->info('[{task}] skipped — not registered', ['task' => $taskName, 'subject' => $subjectId]);
             $this->recordSystemRun($subject, $taskName, [
                 new RawClaim('ai:taskSkipped', $taskName, 100, 'No registered workflow task.'),
@@ -57,7 +57,7 @@ final class TaskRunner
         }
 
         $imageUrl = $subject instanceof ImageSubjectInterface ? $subject->getWorkflowImageUrl() : null;
-        if ($imageUrl !== null) {
+        if (null !== $imageUrl) {
             $this->logger->info('[{task}] image: {url}', ['task' => $taskName, 'url' => $imageUrl]);
         }
 
@@ -77,46 +77,46 @@ final class TaskRunner
         $meta = $this->withDuration($result->meta, $durationMs);
 
         // Log prompts and response at debug level (-vv)
-        if ($meta->prompt !== null) {
+        if (null !== $meta->prompt) {
             $prompts = json_decode($meta->prompt, true);
             if (is_array($prompts)) {
                 $this->logger->info('[{task}] system prompt:{nl}{prompt}', [
-                    'task'   => $taskName,
-                    'nl'     => "\n",
+                    'task' => $taskName,
+                    'nl' => "\n",
                     'prompt' => $prompts['system'] ?? '',
                 ]);
                 $this->logger->info('[{task}] user prompt:{nl}{prompt}', [
-                    'task'   => $taskName,
-                    'nl'     => "\n",
+                    'task' => $taskName,
+                    'nl' => "\n",
                     'prompt' => $prompts['user'] ?? '',
                 ]);
             }
         }
 
-        if ($meta->response !== null) {
+        if (null !== $meta->response) {
             $this->logger->info('[{task}] response:{nl}{json}', [
                 'task' => $taskName,
-                'nl'   => "\n",
+                'nl' => "\n",
                 'json' => json_encode($meta->response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ]);
         }
 
         $tokens = array_filter([
-            'in'     => $meta->inputTokens,
-            'out'    => $meta->outputTokens,
+            'in' => $meta->inputTokens,
+            'out' => $meta->outputTokens,
             'cached' => $meta->imageTokens,
         ]);
         $this->logger->info('[{task}] done in {ms}ms{tokens}', [
-            'task'   => $taskName,
-            'ms'     => $durationMs,
-            'tokens' => $tokens ? ' tokens=' . json_encode($tokens) : '',
+            'task' => $taskName,
+            'ms' => $durationMs,
+            'tokens' => $tokens ? ' tokens='.json_encode($tokens) : '',
         ]);
 
         $this->claimIngestor->record(
             scope: $subject->getWorkflowScope(),
             subjectType: $subject->getWorkflowSubjectType(),
             subjectId: $subjectId,
-            source: $taskName . '@1.0',
+            source: $taskName.'@1.0',
             rawClaims: $result->claims,
             meta: $meta,
         );
@@ -142,7 +142,7 @@ final class TaskRunner
             scope: $subject->getWorkflowScope(),
             subjectType: $subject->getWorkflowSubjectType(),
             subjectId: $subject->getWorkflowSubjectId(),
-            source: $taskName . '@system',
+            source: $taskName.'@system',
             rawClaims: $claims,
             meta: $meta,
         );
@@ -155,11 +155,11 @@ final class TaskRunner
 
     private function withDuration(?RunMeta $meta, int $durationMs): RunMeta
     {
-        if ($meta === null) {
+        if (null === $meta) {
             return new RunMeta(durationMs: $durationMs);
         }
 
-        if ($meta->durationMs !== null) {
+        if (null !== $meta->durationMs) {
             return $meta;
         }
 

@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Analysis;
 
+use Survos\AiWorkflowBundle\Result\SummaryResult;
 use Survos\AiWorkflowBundle\Task\AbstractAnalysisTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
-
-
-use Survos\AiWorkflowBundle\Result\SummaryResult;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 

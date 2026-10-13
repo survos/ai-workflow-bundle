@@ -80,7 +80,7 @@ final class AssemblyAiTranscribeTask implements TaskInterface
 
     public function supports(WorkflowSubjectInterface $subject): bool
     {
-        return $subject instanceof AudioSubjectInterface && $subject->getWorkflowAudioUrl() !== null;
+        return $subject instanceof AudioSubjectInterface && null !== $subject->getWorkflowAudioUrl();
     }
 
     public function getMeta(): array
@@ -96,7 +96,7 @@ final class AssemblyAiTranscribeTask implements TaskInterface
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
         if (!$subject instanceof AudioSubjectInterface || ($audioUrl = $subject->getWorkflowAudioUrl()) === null) {
-            throw new \RuntimeException(self::class . ' requires an AudioSubjectInterface with an audio URL.');
+            throw new \RuntimeException(self::class.' requires an AudioSubjectInterface with an audio URL.');
         }
 
         $fetchableUrl = $this->presignIfS3($audioUrl);
@@ -113,19 +113,14 @@ final class AssemblyAiTranscribeTask implements TaskInterface
         ])->toArray(false);
 
         $transcriptId = $submitted['id'] ?? null;
-        if (!is_string($transcriptId) || $transcriptId === '') {
-            throw new \RuntimeException('AssemblyAI did not return a transcript id: ' . json_encode($submitted, JSON_THROW_ON_ERROR));
+        if (!is_string($transcriptId) || '' === $transcriptId) {
+            throw new \RuntimeException('AssemblyAI did not return a transcript id: '.json_encode($submitted, JSON_THROW_ON_ERROR));
         }
 
         $result = $this->pollUntilDone($transcriptId);
 
         if (($result['status'] ?? null) !== 'completed') {
-            throw new \RuntimeException(sprintf(
-                'AssemblyAI transcription %s failed (status=%s): %s',
-                $transcriptId,
-                (string) ($result['status'] ?? 'unknown'),
-                (string) ($result['error'] ?? 'no error detail'),
-            ));
+            throw new \RuntimeException(sprintf('AssemblyAI transcription %s failed (status=%s): %s', $transcriptId, (string) ($result['status'] ?? 'unknown'), (string) ($result['error'] ?? 'no error detail')));
         }
 
         $formattedText = $this->formatSpeakerText($result);
@@ -164,13 +159,13 @@ final class AssemblyAiTranscribeTask implements TaskInterface
             return $url;
         }
 
-        if ($this->s3 === null) {
+        if (null === $this->s3) {
             throw new \RuntimeException(sprintf('%s: subject URL "%s" is an s3:// URI but no S3 client is configured to presign it.', self::class, $url));
         }
 
         $bucket = (string) ($parsed['host'] ?? '');
         $key = ltrim((string) ($parsed['path'] ?? ''), '/');
-        if ($bucket === '' || $key === '') {
+        if ('' === $bucket || '' === $key) {
             throw new \RuntimeException(sprintf('%s: malformed s3:// URL "%s".', self::class, $url));
         }
 
@@ -196,11 +191,7 @@ final class AssemblyAiTranscribeTask implements TaskInterface
             sleep(self::POLL_INTERVAL_SECONDS);
         } while (time() < $deadline);
 
-        throw new \RuntimeException(sprintf(
-            'AssemblyAI transcript %s did not finish within %d seconds.',
-            $transcriptId,
-            self::MAX_WAIT_SECONDS,
-        ));
+        throw new \RuntimeException(sprintf('AssemblyAI transcript %s did not finish within %d seconds.', $transcriptId, self::MAX_WAIT_SECONDS));
     }
 
     /**
@@ -212,7 +203,7 @@ final class AssemblyAiTranscribeTask implements TaskInterface
     private function formatSpeakerText(array $result): string
     {
         $utterances = $result['utterances'] ?? null;
-        if (!is_array($utterances) || $utterances === []) {
+        if (!is_array($utterances) || [] === $utterances) {
             return trim((string) ($result['text'] ?? ''));
         }
 
@@ -220,7 +211,7 @@ final class AssemblyAiTranscribeTask implements TaskInterface
         $lastSpeaker = null;
         foreach ($utterances as $utterance) {
             $text = trim((string) ($utterance['text'] ?? ''));
-            if ($text === '') {
+            if ('' === $text) {
                 continue;
             }
             $speaker = (string) ($utterance['speaker'] ?? '?');

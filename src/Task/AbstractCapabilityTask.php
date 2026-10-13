@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task;
 
+use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\TextSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
-use Survos\ClaimsBundle\Service\RunMeta;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\AI\Platform\Result\DeferredResult;
 use Symfony\Contracts\Service\Attribute\Required;
@@ -132,7 +132,7 @@ abstract class AbstractCapabilityTask implements TaskInterface
 
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
-        if ($this->platform === null) {
+        if (null === $this->platform) {
             throw new \LogicException(sprintf('Task "%s" requires its configured "%s" platform.', $this->getTask(), $this->platformName()));
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Result;
@@ -17,6 +18,7 @@ final class CensusExtractionResult implements \JsonSerializable
 
         /**
          * Array of table objects, each with headers and rows.
+         *
          * @var array<array{headers: array<string>, rows: array<array<string>>, notes: string}>
          */
         public readonly array $tables,
@@ -32,10 +34,10 @@ final class CensusExtractionResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'title'      => $this->title,
+            'title' => $this->title,
             'has_tables' => $this->hasTables,
-            'tables'     => $this->tables,
-            'language'   => $this->language,
+            'tables' => $this->tables,
+            'language' => $this->language,
             'confidence' => $this->confidence,
         ];
     }

@@ -18,8 +18,9 @@ namespace Survos\AiWorkflowBundle\Result;
 final class ObserveResult
 {
     public function __construct(
-        public readonly array   $routing,
-        public readonly string  $prose,
-        public readonly ?array  $transcription = null,
-    ) {}
+        public readonly array $routing,
+        public readonly string $prose,
+        public readonly ?array $transcription = null,
+    ) {
+    }
 }

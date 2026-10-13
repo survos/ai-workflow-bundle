@@ -23,11 +23,11 @@ final class SubjectRepository extends ServiceEntityRepository
     {
         $subject = $this->findOneBy([
             'subjectType' => $subjectType,
-            'subjectId'   => $subjectId,
-            'scope'       => $scope,
+            'subjectId' => $subjectId,
+            'scope' => $scope,
         ]);
 
-        if ($subject === null) {
+        if (null === $subject) {
             $subject = new Subject($subjectType, $subjectId, $scope);
             $this->getEntityManager()->persist($subject);
         }
@@ -48,7 +48,7 @@ final class SubjectRepository extends ServiceEntityRepository
             ->where('s.subjectType = :type')
             ->setParameter('type', $subjectType);
 
-        if ($scope !== null) {
+        if (null !== $scope) {
             $qb->andWhere('s.scope = :scope')->setParameter('scope', $scope);
         }
 
@@ -60,11 +60,12 @@ final class SubjectRepository extends ServiceEntityRepository
      * Task name is extracted from source before the first '@' (e.g. "observe@1.0" → "observe").
      *
      * @param list<string> $subjectIds
-     * @return array<string, list<string>>  subjectId → [taskName, ...]
+     *
+     * @return array<string, list<string>> subjectId → [taskName, ...]
      */
     public function tasksRunBySubjectId(string $subjectType, array $subjectIds, ?string $scope = null): array
     {
-        if ($subjectIds === []) {
+        if ([] === $subjectIds) {
             return [];
         }
 
@@ -72,26 +73,26 @@ final class SubjectRepository extends ServiceEntityRepository
         $placeholders = implode(',', array_fill(0, count($subjectIds), '?'));
 
         $params = array_values($subjectIds);
-        $types  = array_fill(0, count($subjectIds), ParameterType::STRING);
+        $types = array_fill(0, count($subjectIds), ParameterType::STRING);
 
         $sql = "SELECT DISTINCT subject_id, source FROM claim
                 WHERE subject_type = ? AND subject_id IN ($placeholders)";
         array_unshift($params, $subjectType);
         array_unshift($types, ParameterType::STRING);
 
-        if ($scope !== null) {
+        if (null !== $scope) {
             $sql .= ' AND scope = ?';
             $params[] = $scope;
-            $types[]  = ParameterType::STRING;
+            $types[] = ParameterType::STRING;
         }
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
 
         $result = [];
         foreach ($rows as $row) {
-            $id   = (string) $row['subject_id'];
+            $id = (string) $row['subject_id'];
             $task = explode('@', (string) $row['source'])[0];
-            if ($task !== '' && !in_array($task, $result[$id] ?? [], true)) {
+            if ('' !== $task && !in_array($task, $result[$id] ?? [], true)) {
                 $result[$id][] = $task;
             }
         }

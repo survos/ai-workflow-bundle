@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Controller;
 
-use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\AnalysisTaskInterface;
 use Survos\AiWorkflowBundle\Task\ContextTaskInterface;
 use Survos\AiWorkflowBundle\Task\ImageTaskInterface;
 use Survos\AiWorkflowBundle\Task\ObservationTaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskInterface;
+use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\TextTaskInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,17 +33,17 @@ final class TaskController extends AbstractController
         ];
         foreach ($this->taskRegistry->getTaskMap() as $taskName => $serviceId) {
             $task = $this->taskRegistry->get($taskName);
-            if ($task === null) {
+            if (null === $task) {
                 continue;
             }
 
             $row = [
-                'name'         => $taskName,
-                'serviceId'    => $serviceId,
-                'meta'         => $task->getMeta(),
+                'name' => $taskName,
+                'serviceId' => $serviceId,
+                'meta' => $task->getMeta(),
                 'capabilities' => $this->capabilities($task),
-                'description'  => $this->taskRegistry->getDescriptor($taskName)->description,
-                'prompts'      => $this->promptSources($taskName),
+                'description' => $this->taskRegistry->getDescriptor($taskName)->description,
+                'prompts' => $this->promptSources($taskName),
             ];
 
             $groups[$this->group($task)][$taskName] = $row;
@@ -63,7 +63,7 @@ final class TaskController extends AbstractController
     public function show(string $taskName): Response
     {
         $task = $this->taskRegistry->get($taskName);
-        if ($task === null) {
+        if (null === $task) {
             throw $this->createNotFoundException(sprintf('Unknown AI workflow task "%s".', $taskName));
         }
 
@@ -109,23 +109,23 @@ final class TaskController extends AbstractController
      */
     private function promptSources(string $taskName): array
     {
-        $base = \dirname(__DIR__, 2) . '/templates/prompt';
+        $base = \dirname(__DIR__, 2).'/templates/prompt';
 
         // Observation layout: observation/system/{slug}.html.twig
         $obsSystem = $this->readPrompt("{$base}/observation/system/{$taskName}.html.twig");
-        if ($obsSystem !== null) {
+        if (null !== $obsSystem) {
             return [
                 'system' => $obsSystem,
-                'user'   => $this->readPrompt("{$base}/observation/user/{$taskName}.html.twig"),
+                'user' => $this->readPrompt("{$base}/observation/user/{$taskName}.html.twig"),
             ];
         }
 
         // Analysis layout: shared system + optional per-task user
         $anaSystem = $this->readPrompt("{$base}/analysis/system.html.twig");
-        if ($anaSystem !== null) {
+        if (null !== $anaSystem) {
             return [
                 'system' => $anaSystem,
-                'user'   => $this->readPrompt("{$base}/analysis/user/{$taskName}.html.twig"),
+                'user' => $this->readPrompt("{$base}/analysis/user/{$taskName}.html.twig"),
             ];
         }
 
@@ -141,6 +141,6 @@ final class TaskController extends AbstractController
         // Later: render with Twig against a sample subject/context to inspect the real model prompt.
         $source = file_get_contents($path);
 
-        return $source === false ? null : $source;
+        return false === $source ? null : $source;
     }
 }

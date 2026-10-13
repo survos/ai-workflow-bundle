@@ -6,8 +6,6 @@ namespace Survos\AiWorkflowBundle\Task\Analysis;
 
 use Survos\AiWorkflowBundle\Task\AbstractAnalysisTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
-
-
 use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\TextSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
@@ -28,12 +26,12 @@ final class CensusExtractionTask extends AbstractAnalysisTask
 
     public function supports(WorkflowSubjectInterface $subject): bool
     {
-        if ($subject instanceof TextSubjectInterface && trim((string) $subject->getWorkflowText()) !== '') {
+        if ($subject instanceof TextSubjectInterface && '' !== trim((string) $subject->getWorkflowText())) {
             return true;
         }
 
         return $subject instanceof ContextSubjectInterface
-            && trim((string) ($subject->getWorkflowContext()['ocr_text'] ?? $subject->getWorkflowContext()['ocrText'] ?? '')) !== '';
+            && '' !== trim((string) ($subject->getWorkflowContext()['ocr_text'] ?? $subject->getWorkflowContext()['ocrText'] ?? ''));
     }
 
     protected function inputs(WorkflowSubjectInterface $subject): array
@@ -46,6 +44,6 @@ final class CensusExtractionTask extends AbstractAnalysisTask
             $inputs['text'] = $context['ocr_text'] ?? $context['ocrText'] ?? null;
         }
 
-        return array_filter($inputs, static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []);
+        return array_filter($inputs, static fn (mixed $value): bool => null !== $value && '' !== $value && [] !== $value);
     }
 }

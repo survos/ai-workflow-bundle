@@ -15,27 +15,27 @@ final class TaskRegistryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
-        $disabled    = (array) $container->getParameter('survos_ai_workflow.disabled_tasks');
-        $taskMap     = [];   // name => serviceId
-        $taskMeta    = [];   // name => AsTask::toArray()
+        $disabled = (array) $container->getParameter('survos_ai_workflow.disabled_tasks');
+        $taskMap = [];   // name => serviceId
+        $taskMeta = [];   // name => AsTask::toArray()
         $locatorRefs = [];
 
         foreach ($container->findTaggedServiceIds('ai_workflow.task') as $serviceId => $tags) {
             $definition = $container->getDefinition($serviceId);
-            $class      = $definition->getClass() ?? $serviceId;
+            $class = $definition->getClass() ?? $serviceId;
 
             if (!class_exists($class)) {
                 continue;
             }
 
-            $name        = $this->resolveName($class, $tags);
+            $name = $this->resolveName($class, $tags);
             $description = $this->resolveDescription($class);
 
-            if ($name === null || in_array($name, $disabled, true)) {
+            if (null === $name || in_array($name, $disabled, true)) {
                 continue;
             }
 
-            $attribute  = $this->resolveAttribute($class);
+            $attribute = $this->resolveAttribute($class);
             $descriptor = new AsTask(
                 $description,
                 $class,
@@ -45,18 +45,18 @@ final class TaskRegistryPass implements CompilerPassInterface
             );
 
             $definition->setPublic(false);
-            $taskMap[$name]     = $serviceId;
-            $taskMeta[$name]    = $descriptor->toArray();
+            $taskMap[$name] = $serviceId;
+            $taskMeta[$name] = $descriptor->toArray();
             $locatorRefs[$name] = new Reference($serviceId);
         }
 
-        $container->setParameter('survos_ai_workflow.task_map',  $taskMap);
+        $container->setParameter('survos_ai_workflow.task_map', $taskMap);
         $container->setParameter('survos_ai_workflow.task_meta', $taskMeta);
 
         if ($container->hasDefinition(TaskRegistry::class)) {
             $container->getDefinition(TaskRegistry::class)
-                ->setArgument('$tasks',    ServiceLocatorTagPass::register($container, $locatorRefs))
-                ->setArgument('$taskMap',  $taskMap)
+                ->setArgument('$tasks', ServiceLocatorTagPass::register($container, $locatorRefs))
+                ->setArgument('$taskMap', $taskMap)
                 ->setArgument('$taskMeta', $taskMeta);
         }
     }
@@ -69,8 +69,8 @@ final class TaskRegistryPass implements CompilerPassInterface
             }
         }
 
-        if (defined($class . '::TASK')) {
-            return constant($class . '::TASK');
+        if (defined($class.'::TASK')) {
+            return constant($class.'::TASK');
         }
 
         try {

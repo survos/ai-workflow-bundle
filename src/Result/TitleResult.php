@@ -12,7 +12,7 @@ final class TitleResult implements \JsonSerializable
     public function __construct(
         /**
          * Short, human-readable title for a catalogue record (≤ 80 chars).
-         * e.g. "Letter from Pvt. John Smith, France, 1918"
+         * e.g. "Letter from Pvt. John Smith, France, 1918".
          */
         public readonly string $title,
 
@@ -31,9 +31,9 @@ final class TitleResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'title'             => $this->title,
+            'title' => $this->title,
             'alternativeTitles' => $this->alternativeTitles,
-            'confidence'        => $this->confidence,
+            'confidence' => $this->confidence,
         ];
     }
 }

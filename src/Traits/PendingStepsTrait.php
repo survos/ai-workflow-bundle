@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Survos\AiWorkflowBundle\Traits;
 
 use Doctrine\DBAL\Types\Types;
@@ -21,6 +23,7 @@ trait PendingStepsTrait
         if (!in_array($step, $this->pendingSteps[$phase] ?? [], true)) {
             $this->pendingSteps[$phase][] = $step;
         }
+
         return $this;
     }
 
@@ -30,9 +33,10 @@ trait PendingStepsTrait
             return null;
         }
         $step = array_shift($this->pendingSteps[$phase]);
-        if ($this->pendingSteps[$phase] === []) {
+        if ([] === $this->pendingSteps[$phase]) {
             unset($this->pendingSteps[$phase]);
         }
+
         return $step;
     }
 
@@ -50,6 +54,7 @@ trait PendingStepsTrait
                 array_push($all, ...$value);
             }
         }
+
         return $all;
     }
 }

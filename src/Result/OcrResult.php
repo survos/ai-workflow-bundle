@@ -23,7 +23,7 @@ final class OcrResult implements \JsonSerializable
 
         /**
          * Individual text blocks, left-to-right, top-to-bottom.
-         * Each entry: { "text": "...", "type": "heading|paragraph|caption|table|other" }
+         * Each entry: { "text": "...", "type": "heading|paragraph|caption|table|other" }.
          *
          * @var array<array{text: string, type: string}>
          */
@@ -34,10 +34,10 @@ final class OcrResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'text'       => $this->text,
-            'language'   => $this->language,
+            'text' => $this->text,
+            'language' => $this->language,
             'confidence' => $this->confidence,
-            'blocks'     => $this->blocks,
+            'blocks' => $this->blocks,
         ];
     }
 }

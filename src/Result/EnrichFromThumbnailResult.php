@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Result;
@@ -27,11 +28,11 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
 {
     public function __construct(
         /** dcterms:title — concise name if not already known */
-        public readonly ?string $title            = null,
-        public readonly string  $titleConfidence  = 'high',
+        public readonly ?string $title = null,
+        public readonly string $titleConfidence = 'high',
 
         /** dcterms:description — 1-3 sentences of what is physically visible */
-        public readonly ?string $description      = null,
+        public readonly ?string $description = null,
 
         /**
          * Keywords where uncertainty is encoded in the term itself:
@@ -47,30 +48,32 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
          *
          * @var array<array{term: string, basis?: string|null, confidence?: string|null}>
          */
-        public readonly array   $keywords         = [],
+        public readonly array $keywords = [],
 
         /**
          * Named or described people visible.
+         *
          * @var list<string>
          */
-        public readonly array   $people           = [],
+        public readonly array $people = [],
 
         /**
          * Places visible or inferred (name, optionally hedged with ? / ??).
+         *
          * @var list<string>
          */
-        public readonly array   $places           = [],
+        public readonly array $places = [],
 
         /** ContentType: photograph, postcard, map, manuscript, object, etc. */
-        public readonly ?string $contentType      = null,
-        public readonly string  $contentTypeConfidence = 'high',
+        public readonly ?string $contentType = null,
+        public readonly string $contentTypeConfidence = 'high',
 
         /**
          * Approximate date — explicitly labeled as guess when uncertain.
-         * Format: "1961" (certain), "1960s" (decade guess), "ca. 1920" (approximate)
+         * Format: "1961" (certain), "1960s" (decade guess), "ca. 1920" (approximate).
          */
-        public readonly ?string $dateHint         = null,
-        public readonly string  $dateConfidence   = 'medium',
+        public readonly ?string $dateHint = null,
+        public readonly string $dateConfidence = 'medium',
 
         /**
          * Speculative observations — interpretive claims that go beyond
@@ -88,25 +91,25 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
          *
          * @var array<array{claim: string, confidence: float, basis: string}>
          */
-        public readonly array   $speculations     = [],
+        public readonly array $speculations = [],
 
         /**
          * True only if the image contains readable text worth OCRing.
          * Not set for pure photographs, maps without labels, or objects.
          */
-        public readonly bool    $hasText          = false,
+        public readonly bool $hasText = false,
 
         /** Machine-printed / typed text is present (routes to Tesseract / cheap OCR). */
-        public readonly bool    $typedText        = false,
+        public readonly bool $typedText = false,
 
         /** Handwritten text is present (routes to an HTR pipeline). */
-        public readonly bool    $handwrittenText  = false,
+        public readonly bool $handwrittenText = false,
 
         /** The image shows a pre-printed form layout — blank or filled. */
-        public readonly bool    $isForm           = false,
+        public readonly bool $isForm = false,
 
         /** A form with handwritten entries in blank fields — routes to a form-aware pipeline. */
-        public readonly bool    $isFilledForm     = false,
+        public readonly bool $isFilledForm = false,
 
         /**
          * Information-dense summary ≤350 characters.
@@ -118,16 +121,16 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
          * in traditional embroidered dress at an outdoor market, likely Budapest —
          * donated by Kovács Péter. Possible folk festival context."
          */
-        public readonly ?string $denseSummary     = null,
+        public readonly ?string $denseSummary = null,
 
         /** Overall confidence in the extraction (0.0–1.0) */
-        public readonly float   $confidence       = 1.0,
+        public readonly float $confidence = 1.0,
 
         /**
          * True when the thumbnail + supplied OCR/context are enough and no
          * further image pixels are needed before text-only analysis.
          */
-        public readonly ?bool   $pixelsDone       = null,
+        public readonly ?bool $pixelsDone = null,
 
         /** Why pixelsDone was chosen. Required when pixelsDone is false. */
         public readonly ?string $pixelDecisionReason = null,
@@ -137,14 +140,15 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
          * Examples: read_handwriting, extract_form_fields, read_dense_print,
          * inspect_detail, none.
          */
-        public readonly ?string $highResGoal      = null,
+        public readonly ?string $highResGoal = null,
 
         /** @var string[] Specific visual regions or evidence to revisit at high resolution. */
-        public readonly array   $highResTargets   = [],
+        public readonly array $highResTargets = [],
 
         /** What important evidence would be lost if the high-res pass is skipped. */
-        public readonly ?string $riskIfSkipped    = null,
-    ) {}
+        public readonly ?string $riskIfSkipped = null,
+    ) {
+    }
 
     public function jsonSerialize(): array
     {
@@ -166,51 +170,54 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
         }
 
         $out = [
-            'title'                   => $this->title,
-            'title_confidence'        => $this->title && $this->titleConfidence !== 'high'
+            'title' => $this->title,
+            'title_confidence' => $this->title && 'high' !== $this->titleConfidence
                                             ? $this->titleConfidence : null,
-            'description'             => $this->description,
-            'keywords'                => $this->keywords ?: null,
+            'description' => $this->description,
+            'keywords' => $this->keywords ?: null,
             // Flat term lists per confidence tier — used by indexers and UI
-            'keywords_high'           => $byConf['high']   ?: null,
-            'keywords_medium'         => $byConf['medium'] ?: null,
-            'keywords_low'            => $byConf['low']    ?: null,
-            'people'                  => $this->people     ?: null,
-            'places'                  => $this->places     ?: null,
-            'content_type'            => $this->contentType,
-            'content_type_confidence' => $this->contentTypeConfidence !== 'high'
+            'keywords_high' => $byConf['high'] ?: null,
+            'keywords_medium' => $byConf['medium'] ?: null,
+            'keywords_low' => $byConf['low'] ?: null,
+            'people' => $this->people ?: null,
+            'places' => $this->places ?: null,
+            'content_type' => $this->contentType,
+            'content_type_confidence' => 'high' !== $this->contentTypeConfidence
                                             ? $this->contentTypeConfidence : null,
-            'date_hint'               => $this->dateHint,
-            'date_confidence'         => $this->dateHint ? $this->dateConfidence : null,
-            'speculations'            => $this->speculations ?: null,
-            'has_text'                => $this->hasText         ?: null,
-            'typed_text'              => $this->typedText       ?: null,
-            'handwritten_text'        => $this->handwrittenText ?: null,
-            'is_form'                 => $this->isForm          ?: null,
-            'is_filled_form'          => $this->isFilledForm    ?: null,
-            'dense_summary'           => $this->denseSummary,
-            'confidence'              => $this->confidence < 1.0 ? $this->confidence : null,
-            'pixels_done'             => $this->pixelsDone,
-            'pixel_decision_reason'   => $this->pixelDecisionReason,
-            'high_res_goal'           => $this->highResGoal,
-            'high_res_targets'        => $this->highResTargets ?: null,
-            'risk_if_skipped'         => $this->riskIfSkipped,
+            'date_hint' => $this->dateHint,
+            'date_confidence' => $this->dateHint ? $this->dateConfidence : null,
+            'speculations' => $this->speculations ?: null,
+            'has_text' => $this->hasText ?: null,
+            'typed_text' => $this->typedText ?: null,
+            'handwritten_text' => $this->handwrittenText ?: null,
+            'is_form' => $this->isForm ?: null,
+            'is_filled_form' => $this->isFilledForm ?: null,
+            'dense_summary' => $this->denseSummary,
+            'confidence' => $this->confidence < 1.0 ? $this->confidence : null,
+            'pixels_done' => $this->pixelsDone,
+            'pixel_decision_reason' => $this->pixelDecisionReason,
+            'high_res_goal' => $this->highResGoal,
+            'high_res_targets' => $this->highResTargets ?: null,
+            'risk_if_skipped' => $this->riskIfSkipped,
         ];
 
         return array_filter(
             $out,
-            static fn(mixed $v, string $k): bool => $v !== null && ($v !== false || $k === 'pixels_done'),
+            static fn (mixed $v, string $k): bool => null !== $v && (false !== $v || 'pixels_done' === $k),
             ARRAY_FILTER_USE_BOTH,
         );
     }
 
-    public function needsOcr(): bool { return $this->hasText; }
+    public function needsOcr(): bool
+    {
+        return $this->hasText;
+    }
 
     /** All keyword terms regardless of confidence (for full-text search) */
     public function allKeywords(): array
     {
         return array_values(array_filter(array_map(
-            static fn($kw) => $kw['term'],
+            static fn ($kw) => $kw['term'],
             $this->keywords
         )));
     }
@@ -219,7 +226,7 @@ final class EnrichFromThumbnailResult implements \JsonSerializable
     public function keywordsByConfidence(string $level): array
     {
         return array_values(array_filter(array_map(
-            static fn($kw) => ($kw['confidence'] ?? 'medium') === $level ? $kw['term'] : null,
+            static fn ($kw) => ($kw['confidence'] ?? 'medium') === $level ? $kw['term'] : null,
             $this->keywords
         )));
     }

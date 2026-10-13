@@ -21,7 +21,7 @@ final class SummaryResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'summary'  => $this->summary,
+            'summary' => $this->summary,
             'language' => $this->language,
         ];
     }

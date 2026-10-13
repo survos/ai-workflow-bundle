@@ -36,10 +36,10 @@ final class EnrichFromThumbnailTask extends AbstractPromptTask implements ImageT
         }
 
         return match ($data['high_res_goal'] ?? null) {
-            'read_handwriting'    => ['htr'],
+            'read_handwriting' => ['htr'],
             'extract_form_fields' => ['ocr_mistral', 'extract_census'],
-            'read_dense_print'    => ['ocr_mistral'],
-            default               => [],
+            'read_dense_print' => ['ocr_mistral'],
+            default => [],
         };
     }
 }

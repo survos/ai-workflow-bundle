@@ -23,18 +23,18 @@ final class AsTask
         public readonly array $produces = [],
         public readonly array $samples = [],
     ) {
-        $this->name = $class !== '' ? self::resolveName($class) : '';
+        $this->name = '' !== $class ? self::resolveName($class) : '';
     }
 
     public function toArray(): array
     {
         return [
-            'name'        => $this->name,
+            'name' => $this->name,
             'description' => $this->description,
-            'class'       => $this->class,
-            'consumes'    => $this->consumes,
-            'produces'    => $this->produces,
-            'samples'     => $this->samples,
+            'class' => $this->class,
+            'consumes' => $this->consumes,
+            'produces' => $this->produces,
+            'samples' => $this->samples,
         ];
     }
 
@@ -42,17 +42,17 @@ final class AsTask
     {
         return new self(
             description: $data['description'] ?? '',
-            class:       $data['class']       ?? '',
-            consumes:    $data['consumes']    ?? [],
-            produces:    $data['produces']    ?? [],
-            samples:     $data['samples']     ?? [],
+            class: $data['class'] ?? '',
+            consumes: $data['consumes'] ?? [],
+            produces: $data['produces'] ?? [],
+            samples: $data['samples'] ?? [],
         );
     }
 
     private static function resolveName(string $class): string
     {
-        if (defined($class . '::TASK')) {
-            return constant($class . '::TASK');
+        if (defined($class.'::TASK')) {
+            return constant($class.'::TASK');
         }
 
         return self::deriveName((new \ReflectionClass($class))->getShortName());

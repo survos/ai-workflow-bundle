@@ -11,8 +11,8 @@ final readonly class TaskResult
 {
     /**
      * @param list<RawClaim> $claims
-     * @param list<string>   $appendTasks          follow-up observation/image tasks
-     * @param list<string>   $appendAnalysisTasks  analysis tasks to queue once image tasks drain
+     * @param list<string>   $appendTasks         follow-up observation/image tasks
+     * @param list<string>   $appendAnalysisTasks analysis tasks to queue once image tasks drain
      */
     public function __construct(
         public array $claims = [],

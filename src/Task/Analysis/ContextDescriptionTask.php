@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle\Task\Analysis;
 
+use Survos\AiWorkflowBundle\Result\DescriptionResult;
 use Survos\AiWorkflowBundle\Task\AbstractAnalysisTask;
 use Survos\AiWorkflowBundle\Task\AsTask;
 use Survos\DataContracts\Vocabulary\DcTerms;
 use Survos\DataContracts\Vocabulary\ItemField;
-
-
-use Survos\AiWorkflowBundle\Result\DescriptionResult;
 use Symfony\AI\Agent\AgentInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -40,10 +38,10 @@ final class ContextDescriptionTask extends AbstractAnalysisTask
 
         return parent::promptContext($inputs, $context) + [
             'provenanceDescription' => $context[DcTerms::DESCRIPTION->value] ?? $context['description'] ?? null,
-            'sourceTags'            => $sourceTags ?: null,
-            'date'                  => $context[DcTerms::DATE->value] ?? $context['date'] ?? null,
-            'country'               => $context[ItemField::COUNTRY] ?? null,
-            'city'                  => $context[ItemField::CITY]    ?? null,
+            'sourceTags' => $sourceTags ?: null,
+            'date' => $context[DcTerms::DATE->value] ?? $context['date'] ?? null,
+            'country' => $context[ItemField::COUNTRY] ?? null,
+            'city' => $context[ItemField::CITY] ?? null,
         ];
     }
 }

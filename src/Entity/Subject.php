@@ -6,18 +6,17 @@ namespace Survos\AiWorkflowBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Survos\AiWorkflowBundle\Repository\SubjectRepository;
+use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
+use Survos\AiWorkflowBundle\Traits\PendingStepsTrait;
+use Survos\DataContracts\Dto\Item\BaseItemDto;
+use Survos\DataContracts\Dto\Item\GenericItemDto;
 use Survos\DataContracts\Workflow\ContextSubjectInterface;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
-use Survos\AiWorkflowBundle\Repository\SubjectRepository;
-use Survos\DataContracts\Dto\Item\BaseItemDto;
-use Survos\DataContracts\Dto\Item\GenericItemDto;
-use Survos\DataContracts\Vocabulary\ItemField;
 use Survos\FieldBundle\Attribute\EntityMeta;
 use Survos\FieldBundle\Attribute\RouteIdentity;
 use Survos\FieldBundle\Entity\RouteIdentityTrait;
-use Survos\AiWorkflowBundle\Traits\PendingStepsInterface;
-use Survos\AiWorkflowBundle\Traits\PendingStepsTrait;
 use Survos\StateBundle\Traits\MarkingInterface;
 use Survos\StateBundle\Traits\MarkingTrait;
 use Symfony\Component\Uid\Ulid;
@@ -59,7 +58,7 @@ class Subject implements WorkflowSubjectInterface, MarkingInterface, PendingStep
      * Keys used by the AI pipeline:
      *   image_url      → getWorkflowImageUrl()
      *   thumbnail_url  → getWorkflowImageUrl() fallback
-     *   (all keys)     → getWorkflowContext()
+     *   (all keys)     → getWorkflowContext().
      */
     #[ORM\Column(type: Types::JSON, options: ['default' => '{}'])]
     public array $data = [];
@@ -72,11 +71,11 @@ class Subject implements WorkflowSubjectInterface, MarkingInterface, PendingStep
 
     public function __construct(string $subjectType, string $subjectId, ?string $scope = null)
     {
-        $this->id          = (string) new Ulid();
+        $this->id = (string) new Ulid();
         $this->subjectType = $subjectType;
-        $this->subjectId   = $subjectId;
-        $this->scope       = $scope;
-        $this->createdAt   = new \DateTimeImmutable();
+        $this->subjectId = $subjectId;
+        $this->scope = $scope;
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     // ── WorkflowSubjectInterface ──────────────────────────────────────────────

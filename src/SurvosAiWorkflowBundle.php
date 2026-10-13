@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Survos\AiWorkflowBundle;
 
-use Survos\AiWorkflowBundle\DependencyInjection\Compiler\TaskRegistryPass;
 use Survos\AiWorkflowBundle\Controller\SubjectController;
 use Survos\AiWorkflowBundle\Controller\TaskController;
+use Survos\AiWorkflowBundle\DependencyInjection\Compiler\TaskRegistryPass;
 use Survos\AiWorkflowBundle\Menu\AiWorkflowMenuSubscriber;
 use Survos\AiWorkflowBundle\Repository\SubjectRepository;
 use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
 use Survos\AiWorkflowBundle\Task\TaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\TaskRunner;
-use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Survos\Kit\AbstractSurvosBundle;
 use Survos\Kit\SurvosKitBundle;
 use Survos\Kit\Traits\HasDoctrineEntities;
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Kernel\RequiredBundle;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 #[RequiredBundle(SurvosKitBundle::class)]
@@ -35,7 +35,7 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
 
     public function configureRoutes(RoutingConfigurator $routes): void
     {
-        $routes->import(__DIR__ . '/Controller/', 'attribute');
+        $routes->import(__DIR__.'/Controller/', 'attribute');
     }
 
     public function configure(DefinitionConfigurator $definition): void
@@ -56,7 +56,7 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
 
         $container->parameters()
             ->set('survos_ai_workflow.disabled_tasks', $config['disabled_tasks'])
-            ->set('survos_ai_workflow.task_map',  [])
+            ->set('survos_ai_workflow.task_map', [])
             ->set('survos_ai_workflow.task_meta', []);
 
         $services = $container->services()
@@ -85,8 +85,8 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
             $services->set(AiWorkflowMenuSubscriber::class);
         }
 
-        $services->load('Survos\\AiWorkflowBundle\\Task\\Observation\\', __DIR__ . '/Task/Observation/');
-        $services->load('Survos\\AiWorkflowBundle\\Task\\Analysis\\', __DIR__ . '/Task/Analysis/');
+        $services->load('Survos\\AiWorkflowBundle\\Task\\Observation\\', __DIR__.'/Task/Observation/');
+        $services->load('Survos\\AiWorkflowBundle\\Task\\Analysis\\', __DIR__.'/Task/Analysis/');
     }
 
     public function build(ContainerBuilder $container): void

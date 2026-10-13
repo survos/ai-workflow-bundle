@@ -32,12 +32,12 @@ final class ExtractMetadataTask extends AbstractAnalysisTask
     protected function promptContext(array $inputs, array $context = []): array
     {
         return parent::promptContext($inputs, $context) + [
-            'contentType'           => $context[ItemField::CONTENT_TYPE] ?? $context['content_type'] ?? null,
+            'contentType' => $context[ItemField::CONTENT_TYPE] ?? $context['content_type'] ?? null,
             'provenanceDescription' => $context[DcTerms::DESCRIPTION->value] ?? $context['description'] ?? null,
-            'existingTitle'         => $context[DcTerms::TITLE->value] ?? $context['title'] ?? null,
-            'date'                  => $context[DcTerms::DATE->value] ?? $context['date'] ?? null,
-            'country'               => $context[ItemField::COUNTRY] ?? null,
-            'city'                  => $context[ItemField::CITY]    ?? null,
+            'existingTitle' => $context[DcTerms::TITLE->value] ?? $context['title'] ?? null,
+            'date' => $context[DcTerms::DATE->value] ?? $context['date'] ?? null,
+            'country' => $context[ItemField::COUNTRY] ?? null,
+            'city' => $context[ItemField::CITY] ?? null,
         ];
     }
 }
