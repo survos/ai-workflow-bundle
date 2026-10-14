@@ -81,7 +81,7 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
             ->public()
             ->tag('controller.service_arguments');
 
-        if (class_exists(\Survos\TablerBundle\Event\MenuEvent::class)) {
+        if (class_exists(\Survos\TablerBundle\Menu\AbstractAdminMenuSubscriber::class)) {
             $services->set(AiWorkflowMenuSubscriber::class);
         }
 
