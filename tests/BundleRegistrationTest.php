@@ -7,6 +7,7 @@ namespace Survos\AiWorkflowBundle\Tests;
 use PHPUnit\Framework\TestCase;
 use Survos\AiWorkflowBundle\SurvosAiWorkflowBundle;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
+use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -20,6 +21,7 @@ final class BundleRegistrationTest extends TestCase
         (new SurvosAiWorkflowBundle())->loadExtension(['disabled_tasks' => []], $this->configurator($builder), $builder);
 
         self::assertTrue($builder->hasDefinition(TaskRegistry::class));
+        self::assertTrue($builder->hasDefinition(SubjectFlow::class));
         foreach (\glob(\dirname(__DIR__).'/src/Command/*.php') as $file) {
             self::assertTrue($builder->hasDefinition('Survos\\AiWorkflowBundle\\Command\\'.\basename($file, '.php')));
         }

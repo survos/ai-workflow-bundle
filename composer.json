@@ -1,9 +1,17 @@
 {
     "name": "survos/ai-workflow-bundle",
-    "description": "State-bundle workflow primitives for async AI preparation, observation, analysis, and publishing.",
+    "description": "Symfony workflow primitives for async AI preparation, observation, analysis, and publishing.",
     "type": "symfony-bundle",
     "license": "MIT",
-    "keywords": ["symfony", "ai", "workflow", "state", "observation", "analysis", "claims"],
+    "keywords": [
+        "symfony",
+        "ai",
+        "workflow",
+        "state",
+        "observation",
+        "analysis",
+        "claims"
+    ],
     "autoload": {
         "psr-4": {
             "Survos\\AiWorkflowBundle\\": "src/"
@@ -12,32 +20,35 @@
     "require": {
         "php": "^8.5",
         "survos/kit-bundle": "^2.33",
-        "survos/state-bundle": "^2.5",
         "survos/claims-bundle": "^2.5",
-        "symfony/dependency-injection": "^8.1",
-        "symfony/framework-bundle": "^8.1",
-        "symfony/http-client": "^8.1",
-        "symfony/messenger": "^8.1",
+        "symfony/dependency-injection": "8.2.*@dev",
+        "symfony/framework-bundle": "8.2.*@dev",
+        "symfony/http-client": "8.2.*@dev",
+        "symfony/messenger": "8.2.*@dev",
         "symfony/service-contracts": "^3.6",
-        "symfony/twig-bundle": "^8.1",
+        "symfony/twig-bundle": "8.2.*@dev",
         "twig/twig": "^3.0|^4.0",
         "symfony/ai-bundle": "^0.14",
         "symfony/ai-agent": "^0.14",
         "symfony/ai-open-ai-platform": "^0.14",
         "symfony/ai-mistral-platform": "^0.14",
         "survos/data-contracts": "^2.5",
-        "aws/aws-sdk-php": "^3.388"
+        "aws/aws-sdk-php": "^3.388",
+        "survos/workflow-extras-bundle": "^2.42.8",
+        "survos/workflow-messenger-bundle": "^2.42.9",
+        "survos/menu-bundle": "^2.42.7",
+        "symfony/workflow": "8.2.*@dev"
     },
     "suggest": {
-        "survos/imgproxy-bundle": "Signed imgproxy URL generation — implement AiThumbnailProviderInterface using ImgproxyUrlBuilder"
+        "survos/imgproxy-bundle": "Signed imgproxy URL generation \u2014 implement AiThumbnailProviderInterface using ImgproxyUrlBuilder"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.0",
-        "survos/tabler-bundle": "^2.5"
+        "survos/tabler-bundle": "^2.42.9"
     },
     "extra": {
         "symfony": {
-            "require": "^8.0"
+            "require": "8.2.*"
         }
     }
 }

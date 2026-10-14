@@ -1,6 +1,6 @@
 # Survos AI Workflow Bundle
 
-State-bundle workflow primitives for async AI work over any subject.
+Symfony 8.2 workflow primitives for async AI work over any subject.
 
 The bundle defines a small shared lifecycle:
 
@@ -22,7 +22,7 @@ The bundle may define reusable tasks and prompt templates. Treat those as a prom
 
 ## Core Classes
 
-- `Workflow\SubjectFlow`: shared state-bundle definition.
+- `Workflow\SubjectFlow`: native attribute-based workflow definition.
 - `Contract\WorkflowSubjectInterface`: minimal subject id plus queue/lock shape for entities. Claim subject type defaults to the PHP class name.
 - `Task\TaskInterface`: callable workflow task that returns claims.
 - `Task\TaskResult`: claims plus optional follow-up tasks.
@@ -101,3 +101,25 @@ Inside `Survos\AiWorkflowBundle`, class names intentionally avoid the `Ai` prefi
 ## Failure Model
 
 There is no `failed` place in the initial workflow. Failures should be recorded on task runs, claims, or app-specific fields while the subject remains at its current milestone. Apps can add a failure place later if they need one.
+
+## Workflow integration
+
+Enable `survos/workflow-extras-bundle` and `survos/workflow-messenger-bundle`,
+with `workflow: ~` in your application configuration. State-bundle is no longer
+required. The AI workflow supports subjects implementing `PendingStepsInterface`;
+other workflow subjects, such as media records, retain their own lifecycle.
+Doctrine subjects keep a scalar `marking` property and the usual Symfony marking
+store accessors. Existing persisted place values are unchanged.
+
+Configure Messenger transports named `ai_subject.prepare`, `ai_subject.observe`,
+`ai_subject.analyze`, `ai_subject.review`, and `ai_subject.publish`. Transition
+metadata selects these transports explicitly. The application's transport DSNs
+control how the jobs are delivered; the bundle does not create queues implicitly.
+
+Observation repeats while observation tasks remain. Analysis begins after
+observation drains and repeats only while analysis tasks remain. Review waits
+for analysis to drain; automatic continuation then publishes once. Applications
+can add guard listeners for human approval or other review policy. Manual review
+and publish transitions remain repeatable. Pending tasks retain FIFO ordering.
+
+Menu integration uses `MenuSlot::ADMIN_NAVBAR_MENU` through `AsMenuListener`.

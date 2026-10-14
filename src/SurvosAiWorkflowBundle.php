@@ -13,9 +13,11 @@ use Survos\AiWorkflowBundle\Task\TaskClaimMapper;
 use Survos\AiWorkflowBundle\Task\TaskInterface;
 use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\TaskRunner;
+use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Survos\Kit\AbstractSurvosBundle;
 use Survos\Kit\SurvosKitBundle;
 use Survos\Kit\Traits\HasDoctrineEntities;
+use Survos\WorkflowMessengerBundle\SurvosWorkflowMessengerBundle;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Kernel\RequiredBundle;
@@ -23,6 +25,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 #[RequiredBundle(SurvosKitBundle::class)]
+#[RequiredBundle(SurvosWorkflowMessengerBundle::class)]
 // Symfony\Component\HttpKernel\Bundle\Bundle <-- Flex auto-registration marker (see Survos\Kit\AbstractSurvosBundle)
 final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
 {
@@ -68,6 +71,7 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
             ->public()
             ->arg('$taskMap', '%survos_ai_workflow.task_map%');
 
+        $services->set(SubjectFlow::class);
         $services->set(SubjectRepository::class);
         $services->set(TaskClaimMapper::class);
         $services->set(TaskRunner::class)
@@ -81,7 +85,7 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
             ->public()
             ->tag('controller.service_arguments');
 
-        if (class_exists(\Survos\TablerBundle\Menu\AbstractAdminMenuSubscriber::class)) {
+        if (class_exists(\Survos\TablerBundle\Event\MenuEvent::class)) {
             $services->set(AiWorkflowMenuSubscriber::class);
         }
 

@@ -17,8 +17,7 @@ use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
 use Survos\FieldBundle\Attribute\EntityMeta;
 use Survos\FieldBundle\Attribute\RouteIdentity;
 use Survos\FieldBundle\Entity\RouteIdentityTrait;
-use Survos\StateBundle\Traits\MarkingInterface;
-use Survos\StateBundle\Traits\MarkingTrait;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Ulid;
 
 /**
@@ -32,11 +31,25 @@ use Symfony\Component\Uid\Ulid;
 #[ORM\UniqueConstraint(name: 'uniq_subject', fields: ['scope', 'subjectType', 'subjectId'])]
 #[EntityMeta(icon: 'mdi:dots-circle', group: 'AI Workflow', label: 'Subjects')]
 #[RouteIdentity(field: 'id')]
-class Subject implements WorkflowSubjectInterface, MarkingInterface, PendingStepsInterface, ImageSubjectInterface, ContextSubjectInterface
+class Subject implements WorkflowSubjectInterface, PendingStepsInterface, ImageSubjectInterface, ContextSubjectInterface
 {
-    use MarkingTrait;
     use PendingStepsTrait;
     use RouteIdentityTrait;
+    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[Groups(['transition', 'minimum', 'marking', 'searchable'])]
+    public ?string $marking = null;
+
+    public function getMarking(): ?string
+    {
+        return $this->marking;
+    }
+
+    public function setMarking(?string $marking, array $context = []): self
+    {
+        $this->marking = $marking;
+
+        return $this;
+    }
 
     #[ORM\Id]
     #[ORM\Column(length: 26)]
