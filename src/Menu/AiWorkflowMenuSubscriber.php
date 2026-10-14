@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Survos\AiWorkflowBundle\Menu;
 
 use Survos\MenuBundle\Attribute\AsMenuListener;
+use Survos\MenuBundle\Event\MenuEvent;
 use Survos\MenuBundle\MenuSlot;
-use Survos\TablerBundle\Event\MenuEvent;
 use Survos\TablerBundle\Menu\AbstractAdminMenuSubscriber;
 
 final class AiWorkflowMenuSubscriber extends AbstractAdminMenuSubscriber
