@@ -126,12 +126,7 @@
           </div>
 
           <div id="{{ tabId }}-workflow" class="tab-pane" role="tabpanel">
-            <twig:state:workflow-marking
-              :subject="subject"
-              workflowCode="ai_subject"
-              :redirectUrl="app.request.uri"
-              layout="table"
-            />
+            <span class="badge bg-blue-lt">{{ subject.marking ?? 'new' }}</span>
           </div>
 
           <div id="{{ tabId }}-claims" class="tab-pane" role="tabpanel">
