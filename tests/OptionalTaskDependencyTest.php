@@ -17,7 +17,7 @@ final class OptionalTaskDependencyTest extends TestCase
         self::assertSame('htr_annotate', $task->getTask());
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('ai.agent.mistral_vision');
-        $task->run($this->createMock(WorkflowSubjectInterface::class));
+        $task->run($this->createStub(WorkflowSubjectInterface::class));
     }
 
     public function testMissingPlatformFailsOnlyWhenTaskRuns(): void
@@ -26,6 +26,6 @@ final class OptionalTaskDependencyTest extends TestCase
         self::assertSame('florence', $task->getTask());
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('ai-tools');
-        $task->run($this->createMock(WorkflowSubjectInterface::class));
+        $task->run($this->createStub(WorkflowSubjectInterface::class));
     }
 }
