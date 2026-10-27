@@ -19,6 +19,7 @@ final readonly class TaskResult
         public array $appendTasks = [],
         public array $appendAnalysisTasks = [],
         public ?RunMeta $meta = null,
+        public ?object $output = null,
     ) {
     }
 }

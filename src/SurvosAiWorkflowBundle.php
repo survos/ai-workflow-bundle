@@ -67,6 +67,9 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
             ->autowire()
             ->autoconfigure();
 
+        $services->set(Execution\OperationCache::class)
+            ->arg('$cache', \Symfony\Component\DependencyInjection\Loader\Configurator\service('cache.app'));
+
         $services->set(TaskRegistry::class)
             ->public()
             ->arg('$taskMap', '%survos_ai_workflow.task_map%');

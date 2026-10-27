@@ -123,3 +123,48 @@ can add guard listeners for human approval or other review policy. Manual review
 and publish transitions remain repeatable. Pending tasks retain FIFO ordering.
 
 Menu integration uses `MenuSlot::ADMIN_NAVBAR_MENU` through `AsMenuListener`.
+
+### Typed document assessments and cached operations
+
+`DocumentAssessment` is a shared answer contract for source rules, humans, and AI:
+`handwritten`, `printed`, and `correspondence` are nullable booleans, with a required
+`basis`. Unknown is distinct from false. `AssessmentEvidence` attaches a non-AI
+origin (`source`, `human`, or `tool`) and provenance reference outside the model schema.
+
+The `describe_source` task extracts visual evidence without choosing follow-up tasks.
+`assess_document` uses the application's `ai.agent.assessment`, requests
+`response_format: DocumentAssessment::class`, and returns its hydrated DTO in
+`TaskResult::output`. It needs supplied text evidence. Applications supply the
+workflow policy, model configuration, persistence, and any trusted source rules.
+
+`AbstractPromptTask` now consumes class-based outputs through `asObject($class)`.
+Only tasks without a response class use the existing text/JSON fallback. Existing
+claim mappers still receive arrays, converted from the hydrated DTO without text
+parsing. `outputClass()` exposes the output contract for schema-aware cache keys.
+
+`OperationCache::execute($identity, $operation)` stores successful object results for
+24 hours by default. The caller must include all relevant inputs, prompt/schema
+versions, model/provider options, content fingerprints, and scope in `$identity`.
+Exceptions are not cached. The returned `CachedExecution` separates cache-hit status
+and current elapsed time from the original result's creation time and duration.
+The service uses `cache.app`; a consumer can override its cache argument.
+
+## Idea: OpenRouter as an optional platform (not adopted)
+
+[OpenRouter](https://openrouter.ai/) is one OpenAI-compatible endpoint in front of hundreds of models, with
+fallbacks, per-token pass-through pricing and cross-provider cost reporting. `symfony/ai-open-router-platform`
+(v1.0.0-BETA1) is a ready-made `symfony/ai` bridge, so using it is cheaper than writing our own multi-model router.
+
+Worth trying for the **text analysis tasks** (`SummarizeTask`, `GenerateTitleTask`, `ExtractMetadataTask`, ...):
+register it as another `ai.platform.*` and A/B models per task with config only. Keep recording the resolved model
+in `RunMeta` so claims stay reproducible.
+
+Not a fit for:
+
+- `OcrMistralTask` and `PeriodicalStructureTask` — they pin a model and call Mistral's dedicated endpoints directly.
+- `BatchableTaskInterface` — batching relies on provider-native batch APIs (`mistral`, `openai`, `anthropic`).
+- Bulk corpus work, where a gateway adds a hop and possibly a fee.
+- Image AI, which goes through mediary.
+
+Before relying on it, check from the API docs: the fee on top of provider rates, structured-output and tool-calling
+support per model, and data-retention terms. Only the homepage was reviewed (2026-10-27).

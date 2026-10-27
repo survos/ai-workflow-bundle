@@ -37,7 +37,8 @@
         "survos/workflow-extras-bundle": "^2.42.8",
         "survos/workflow-messenger-bundle": "^2.42.9",
         "survos/menu-bundle": "^2.42.7",
-        "symfony/workflow": "8.2.*@dev"
+        "symfony/workflow": "8.2.*@dev",
+        "symfony/cache-contracts": "^3.6"
     },
     "suggest": {
         "survos/imgproxy-bundle": "Signed imgproxy URL generation \u2014 implement AiThumbnailProviderInterface using ImgproxyUrlBuilder"

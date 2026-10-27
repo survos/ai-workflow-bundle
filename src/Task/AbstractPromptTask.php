@@ -59,6 +59,11 @@ abstract class AbstractPromptTask implements TaskInterface
         return AsTask::deriveName((new \ReflectionClass(static::class))->getShortName());
     }
 
+    public function outputClass(): ?string
+    {
+        return $this->responseFormatClass();
+    }
+
     public function run(WorkflowSubjectInterface $subject): TaskResult
     {
         if (null === $this->agent) {
@@ -85,11 +90,14 @@ abstract class AbstractPromptTask implements TaskInterface
         $result = $this->agent->call(new MessageBag(Message::forSystem($systemPrompt), $userMessage), $options);
 
         return $this->taskResultFromData(
-            $this->normalizeContent($result->getContent()),
+            null !== $format
+                ? $this->structuredData($output = $result->asObject($format))
+                : $this->normalizeContent($result->getContent()),
             $this->tokenUsage($result->getMetadata()->get('token_usage')),
             $systemPrompt,
             $userPrompt,
             $this->modelId($result),
+            $output ?? null,
         );
     }
 
@@ -141,13 +149,14 @@ abstract class AbstractPromptTask implements TaskInterface
      * @param array<string,mixed>      $data
      * @param array<string,mixed>|null $tokens
      */
-    private function taskResultFromData(array $data, ?array $tokens, string $systemPrompt, string $userPrompt, ?string $model): TaskResult
+    private function taskResultFromData(array $data, ?array $tokens, string $systemPrompt, string $userPrompt, ?string $model, ?object $output = null): TaskResult
     {
         if (null !== $tokens) {
             $data['_tokens'] = $tokens;
         }
 
         return new TaskResult(
+            output: $output,
             claims: $this->claimsFromData($data),
             appendTasks: $this->followUpTasks($data),
             appendAnalysisTasks: $this->followUpAnalysisTasks($data),
@@ -464,6 +473,12 @@ abstract class AbstractPromptTask implements TaskInterface
     /**
      * @return array<string, mixed>
      */
+    private function structuredData(object $output): array
+    {
+        // No text parsing: Symfony has already checked and hydrated the response class.
+        return $output instanceof \JsonSerializable ? $output->jsonSerialize() : \get_object_vars($output);
+    }
+
     private function normalizeContent(mixed $content): array
     {
         if ($content instanceof \JsonSerializable) {
