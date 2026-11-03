@@ -27,7 +27,7 @@ final class SubjectController extends AbstractController
         $marking = $request->query->get('marking');
 
         $qb = $this->subjectRepository->createQueryBuilder('s')
-            ->orderBy('s.createdAt', 'DESC');
+            ->orderBy('s.createdAt', \SortDirection::Descending);
 
         if (null !== $scope && '' !== $scope) {
             $qb->andWhere('s.scope = :scope')->setParameter('scope', $scope);
