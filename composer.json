@@ -25,6 +25,7 @@
         "symfony/framework-bundle": "8.2.*@dev",
         "symfony/http-client": "8.2.*@dev",
         "symfony/messenger": "8.2.*@dev",
+        "symfony/uid": "8.2.*@dev",
         "symfony/service-contracts": "^3.6",
         "symfony/twig-bundle": "8.2.*@dev",
         "twig/twig": "^3.0|^4.0",

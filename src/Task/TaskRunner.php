@@ -13,6 +13,10 @@ use Survos\ClaimsBundle\Service\RawClaim;
 use Survos\ClaimsBundle\Service\RunMeta;
 use Survos\DataContracts\Workflow\ImageSubjectInterface;
 use Survos\DataContracts\Workflow\WorkflowSubjectInterface;
+use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 final class TaskRunner
 {
@@ -64,6 +68,13 @@ final class TaskRunner
         try {
             $result = $task->run($subject);
         } catch (\Throwable $e) {
+            if (self::isTransient($e)) {
+                // Not the task's verdict: leave the subject unsaved so Messenger retries it (and
+                // routes it to the failure transport when retries run out) with the step still pending.
+                $this->logger->warning('[{task}] transient failure, will be retried: {error}', ['task' => $taskName, 'error' => $e->getMessage()]);
+
+                throw $e;
+            }
             $this->logger->error('[{task}] FAILED: {error}', ['task' => $taskName, 'error' => $e->getMessage()]);
             $this->recordSystemRun($subject, $taskName, [
                 new RawClaim('ai:taskFailed', $taskName, 100, $e->getMessage()),
@@ -129,6 +140,21 @@ final class TaskRunner
         }
 
         return $taskName;
+    }
+
+    /** Network trouble, a 5xx, a 429, or an explicit RecoverableMessageHandlingException: worth another attempt. */
+    public static function isTransient(\Throwable $e): bool
+    {
+        for ($error = $e; null !== $error; $error = $error->getPrevious()) {
+            if ($error instanceof RecoverableMessageHandlingException
+                || $error instanceof TransportExceptionInterface
+                || $error instanceof ServerExceptionInterface
+                || ($error instanceof HttpExceptionInterface && 429 === $error->getResponse()->getStatusCode())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function recordSystemRun(
