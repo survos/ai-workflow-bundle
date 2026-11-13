@@ -31,11 +31,6 @@ final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
 {
     use HasDoctrineEntities;
 
-    protected function doctrineAlias(): string
-    {
-        return 'AiWorkflow';
-    }
-
     public function configureRoutes(RoutingConfigurator $routes): void
     {
         $routes->import(__DIR__.'/Controller/', 'attribute');
