@@ -85,8 +85,10 @@ final class ObserveTask extends AbstractPromptTask implements ImageTaskInterface
 
         $existingMetadata = $this->knownFacts($context);
 
+        // Never offer the deprecated combined pass as a follow-up: enrichment comes from the
+        // observation, not from a second look at the pixels.
         $availableSteps = array_keys(
-            $this->taskRegistry->getByInterface(ImageTaskInterface::class, [self::TASK]),
+            $this->taskRegistry->getByInterface(ImageTaskInterface::class, [self::TASK, EnrichFromThumbnailTask::TASK]),
         );
 
         $availableAnalysis = array_keys(
