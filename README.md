@@ -20,6 +20,13 @@ The bundle does not decide what those transitions do. Applications provide workf
 
 The bundle may define reusable tasks and prompt templates. Treat those as a prompt/task repository, not app policy: applications still decide which tasks to queue, when to append follow-up tasks, and what `publish` means.
 
+## Service endpoints
+
+See [M6 audio services](docs/m6-audio-services.md) for the private VoiceStudio
+connection, speech/transcription contracts, native diarization workflow, model
+limits, and service operations. These are deployment references; applications
+still own their clients, credentials, queue policy, and claim mapping.
+
 ## Core Classes
 
 - `Workflow\SubjectFlow`: native attribute-based workflow definition.
