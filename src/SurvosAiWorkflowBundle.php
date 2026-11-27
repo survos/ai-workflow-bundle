@@ -15,29 +15,28 @@ use Survos\AiWorkflowBundle\Task\TaskRegistry;
 use Survos\AiWorkflowBundle\Task\TaskRunner;
 use Survos\AiWorkflowBundle\Workflow\SubjectFlow;
 use Survos\Kit\AbstractSurvosBundle;
+use Survos\Kit\Routing\ConfigurableRoutesInterface;
 use Survos\Kit\SurvosKitBundle;
+use Survos\Kit\Traits\HasConfigurableRoutes;
 use Survos\Kit\Traits\HasDoctrineEntities;
 use Survos\WorkflowMessengerBundle\SurvosWorkflowMessengerBundle;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Kernel\RequiredBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 #[RequiredBundle(SurvosKitBundle::class)]
 #[RequiredBundle(SurvosWorkflowMessengerBundle::class)]
 // Symfony\Component\HttpKernel\Bundle\Bundle <-- Flex auto-registration marker (see Survos\Kit\AbstractSurvosBundle)
-final class SurvosAiWorkflowBundle extends AbstractSurvosBundle
+final class SurvosAiWorkflowBundle extends AbstractSurvosBundle implements ConfigurableRoutesInterface
 {
-    use HasDoctrineEntities;
+    use HasConfigurableRoutes;
 
-    public function configureRoutes(RoutingConfigurator $routes): void
-    {
-        $routes->import(__DIR__.'/Controller/', 'attribute');
-    }
+    use HasDoctrineEntities;
 
     public function configure(DefinitionConfigurator $definition): void
     {
+        $this->addRouteOptions($definition->rootNode()->children(), '');
         $definition->rootNode()
             ->children()
                 ->arrayNode('disabled_tasks')
